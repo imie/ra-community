@@ -1,0 +1,33 @@
+{
+  "name": "ra-community",
+  "version": "1.0.0",
+  "description": "Residence Association Community Management System",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev --workspace=apps/web\" \"npm run dev --workspace=apps/backend\"",
+    "build": "npm run build --workspace=apps/web && npm run build --workspace=apps/backend",
+    "start": "npm start --workspace=apps/web",
+    "lint": "npm run lint --workspace=apps/web && npm run lint --workspace=apps/mobile",
+    "format": "prettier --write .",
+    "test": "npm test --workspace=apps/web && npm test --workspace=apps/backend",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "docker:build": "docker-compose build",
+    "setup": "npm install && npm run setup:env && npm run docker:build",
+    "setup:env": "test -f .env || cp .env.example .env"
+  },
+  "workspaces": [
+    "apps/web",
+    "apps/mobile",
+    "apps/backend"
+  ],
+  "devDependencies": {
+    "concurrently": "^8.2.0",
+    "prettier": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}
