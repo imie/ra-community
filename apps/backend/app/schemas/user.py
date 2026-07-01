@@ -42,6 +42,17 @@ class UserResponse(BaseModel):
     email: str
     full_name: str
     phone_number: Optional[str]
+    ic_number: Optional[str] = None
+    date_of_birth: Optional[datetime] = None
+    place_of_birth: Optional[str] = None
+    sex: Optional[str] = None
+    race: Optional[str] = None
+    marital_status: Optional[str] = None
+    taman_name: Optional[str] = None
+    house_number: Optional[str] = None
+    jalan_aman_serenia: Optional[str] = None
+    job_title: Optional[str] = None
+    employer_name: Optional[str] = None
     is_active: bool
     is_verified: bool
     created_at: datetime

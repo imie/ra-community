@@ -19,7 +19,7 @@ app = FastAPI(
     title="RA Community Management API",
     description="API for Residence Association Community Management System",
     version="1.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # CORS Middleware
@@ -31,6 +31,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+from app.api.auth import router as auth_router
+from app.api.users import router as users_router
+
+app.include_router(auth_router)
+app.include_router(users_router)
 
 @app.get("/health")
 async def health_check():
