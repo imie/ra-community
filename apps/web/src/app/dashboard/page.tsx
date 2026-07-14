@@ -9,10 +9,14 @@ import { formatDate } from '@utils/index'
 
 export default function DashboardPage() {
   const router = useRouter()
-  const { isAuthenticated, logout, user, setUser } = useAuthStore()
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const logout = useAuthStore((s) => s.logout)
+  const user = useAuthStore((s) => s.user)
+  const setUser = useAuthStore((s) => s.setUser)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    // isAuthenticated is a stable selector — safe to call directly
     if (!isAuthenticated()) {
       router.replace('/login')
       return
@@ -25,7 +29,8 @@ export default function DashboardPage() {
         router.replace('/login')
       })
       .finally(() => setLoading(false))
-  }, [isAuthenticated, logout, router, setUser])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // run once on mount — router/auth are stable
 
   if (loading) {
     return (

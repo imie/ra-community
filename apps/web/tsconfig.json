@@ -36,7 +36,12 @@
       "@lib/*": ["./src/lib/*"],
       "@types/*": ["./src/types/*"],
       "@utils/*": ["./src/lib/utils/*"]
-    }
+    },
+    "typeRoots": [
+      "./node_modules/@types",
+      "../../node_modules/@types"
+    ],
+    "types": ["node", "react", "react-dom"]
   },
   "include": ["src", "next-env.d.ts"],
   "exclude": ["node_modules"]

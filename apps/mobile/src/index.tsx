@@ -1,7 +1,5 @@
-"""
-Mobile app entry point (Expo Router).
-This file is the root of the Expo Router file system.
-"""
+// Mobile app root — Expo Router entry point.
+// Expo Router looks for an `app/` directory; this file bootstraps the navigator.
 import { Redirect } from 'expo-router'
 
 export default function Index() {

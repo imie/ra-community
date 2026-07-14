@@ -1,5 +1,5 @@
 /**
- * TypeScript types mirroring the backend Pydantic schemas.
+ * TypeScript types mirroring the backend Pydantic schemas exactly.
  */
 
 // --------------- Auth ---------------
@@ -56,37 +56,47 @@ export interface UserResponse {
   id: string
   email: string
   full_name: string
-  phone_number: string | null
   role: UserRole
+  phone_number: string | null
   ic_number: string | null
-  date_of_birth: string | null   // ISO date string (YYYY-MM-DD)
+  date_of_birth: string | null  // ISO date string (YYYY-MM-DD)
   place_of_birth: string | null
   sex: UserSex | null
   race: UserRace | null
   marital_status: MaritalStatus | null
+  num_dependents: number | null
   taman_name: string | null
   house_number: string | null
   jalan_aman_serenia: string | null
   job_title: string | null
   employer_name: string | null
+  employer_address: string | null
+  employer_phone: string | null
   is_active: boolean
   is_verified: boolean
   created_at: string  // ISO datetime
   updated_at: string  // ISO datetime
 }
 
+/**
+ * Fields a user is allowed to update on their own profile.
+ * Mirrors backend UserProfileUpdate schema exactly.
+ */
 export interface UserProfileUpdate {
   full_name?: string
   phone_number?: string
   ic_number?: string
-  date_of_birth?: string  // ISO date string
+  date_of_birth?: string  // ISO date string YYYY-MM-DD
   place_of_birth?: string
   sex?: UserSex
   race?: UserRace
   marital_status?: MaritalStatus
+  num_dependents?: number
   taman_name?: string
   house_number?: string
   jalan_aman_serenia?: string
   job_title?: string
   employer_name?: string
+  employer_address?: string
+  employer_phone?: string
 }

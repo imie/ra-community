@@ -10,6 +10,7 @@ import type {
   ForgotPasswordRequest,
   PasswordResetRequest,
   UserResponse,
+  UserProfileUpdate,
 } from '@types/index'
 
 export const authApi = {
@@ -39,6 +40,7 @@ export const userApi = {
   getMe: () =>
     apiClient.get<UserResponse>('/users/me').then((r) => r.data),
 
-  updateMe: (data: Partial<UserResponse>) =>
+  /** Only fields defined in UserProfileUpdate are sent to the backend. */
+  updateMe: (data: UserProfileUpdate) =>
     apiClient.put<UserResponse>('/users/me', data).then((r) => r.data),
 }

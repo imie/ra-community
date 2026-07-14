@@ -2,16 +2,14 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Install dependencies
+# Install dependencies only (separate layer for better caching)
 COPY package*.json ./
 RUN npm install
 
-# Copy app code
+# Copy source code (node_modules excluded via .dockerignore)
 COPY . .
-
-# Build Next.js
-RUN npm run build
 
 EXPOSE 3000
 
-CMD ["npm", "start"]
+# Development server with hot-reload
+CMD ["npm", "run", "dev"]

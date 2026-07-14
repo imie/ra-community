@@ -52,6 +52,10 @@ services:
       - BACKEND_DEBUG=True
       - SECRET_KEY=dev-secret-key-change-in-production
       - ALLOWED_HOSTS=localhost,127.0.0.1,backend,web,localhost:3000
+      - JWT_SECRET=dev-jwt-secret-change-in-production
+      - JWT_ALGORITHM=HS256
+      - JWT_EXPIRATION_HOURS=24
+      - JWT_REFRESH_EXPIRATION_DAYS=7
       - CORS_ORIGINS=http://localhost:3000,http://localhost:19006
     ports:
       - "8000:8000"
@@ -75,6 +79,7 @@ services:
     environment:
       - NEXT_PUBLIC_API_URL=http://backend:8000/api
       - NEXT_PUBLIC_APP_NAME=RA Community Management
+      - BACKEND_URL=http://backend:8000
     ports:
       - "3000:3000"
     volumes:
