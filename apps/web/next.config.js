@@ -1,7 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  swcMinify: true,
   
   // Environment variables
   env: {
@@ -45,8 +44,9 @@ const nextConfig = {
     return {
       beforeFiles: [
         {
+          // Forward /api/:path* → backend, preserving the /api/ prefix
           source: '/api/:path*',
-          destination: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/:path*`
+          destination: `${process.env.BACKEND_URL || 'http://localhost:8000'}/api/:path*`
         }
       ]
     }

@@ -4,7 +4,7 @@ User model for resident accounts - comprehensive with 18 data fields
 from sqlalchemy import Column, String, DateTime, Boolean, Integer, Text, Date, Enum as SAEnum, func, ForeignKey, JSON
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 from app.db.database import Base
 
@@ -123,13 +123,13 @@ class User(Base):
         """Check if account is currently locked"""
         if self.account_locked_until is None:
             return False
-        return datetime.utcnow() < self.account_locked_until
+        return datetime.now(timezone.utc) < self.account_locked_until
     
     def mark_login_success(self):
         """Reset failed login attempts and update last login"""
         self.failed_login_attempts = 0
         self.account_locked_until = None
-        self.last_login = datetime.utcnow()
+        self.last_login = datetime.now(timezone.utc)
     
     def increment_failed_login(self):
         """Increment failed login attempts for brute-force protection"""
@@ -154,11 +154,11 @@ class PasswordResetToken(Base):
     
     def is_valid(self) -> bool:
         """Check if token is still valid (not expired and not used)"""
-        return datetime.utcnow() < self.expires_at and self.used_at is None
+        return datetime.now(timezone.utc) < self.expires_at and self.used_at is None
     
     def mark_used(self):
         """Mark token as used"""
-        self.used_at = datetime.utcnow()
+        self.used_at = datetime.now(timezone.utc)
     
     def __repr__(self):
         return f"<PasswordResetToken(id={self.id}, user_id={self.user_id}, expires_at={self.expires_at})>"
@@ -182,11 +182,11 @@ class EmailVerificationToken(Base):
     
     def is_valid(self) -> bool:
         """Check if token is still valid (not expired and not verified)"""
-        return datetime.utcnow() < self.expires_at and self.verified_at is None
+        return datetime.now(timezone.utc) < self.expires_at and self.verified_at is None
     
     def mark_verified(self):
         """Mark email as verified"""
-        self.verified_at = datetime.utcnow()
+        self.verified_at = datetime.now(timezone.utc)
     
     def __repr__(self):
         return f"<EmailVerificationToken(id={self.id}, user_id={self.user_id}, expires_at={self.expires_at})>"
@@ -221,7 +221,7 @@ class OAuthCredential(Base):
         """Check if OAuth token is expired"""
         if self.expires_at is None:
             return False
-        return datetime.utcnow() > self.expires_at
+        return datetime.now(timezone.utc) > self.expires_at
     
     def __repr__(self):
         return f"<OAuthCredential(id={self.id}, user_id={self.user_id}, provider={self.provider})>"

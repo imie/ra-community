@@ -1,7 +1,7 @@
 """
 Authentication service helpers for the backend.
 """
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import secrets
 from typing import Optional
 from uuid import UUID
@@ -39,7 +39,7 @@ def create_user(db: Session, email: str, password: str, full_name: str, phone_nu
 
 def create_password_reset_token(db: Session, user: User) -> PasswordResetToken:
     token = secrets.token_urlsafe(40)
-    expires_at = datetime.utcnow() + timedelta(hours=PASSWORD_RESET_TOKEN_EXPIRE_HOURS)
+    expires_at = datetime.now(timezone.utc) + timedelta(hours=PASSWORD_RESET_TOKEN_EXPIRE_HOURS)
     reset_token = PasswordResetToken(
         user_id=user.id,
         token=token,
@@ -57,7 +57,7 @@ def find_valid_password_reset_token(db: Session, token: str) -> Optional[Passwor
         .filter(
             PasswordResetToken.token == token,
             PasswordResetToken.used_at.is_(None),
-            PasswordResetToken.expires_at > datetime.utcnow(),
+            PasswordResetToken.expires_at > datetime.now(timezone.utc),
         )
         .first()
     )
@@ -70,7 +70,7 @@ def reset_password_with_token(db: Session, token: str, new_password: str) -> Opt
 
     user = reset_token.user
     user.password_hash = hash_password(new_password)
-    user.last_password_change = datetime.utcnow()
+    user.last_password_change = datetime.now(timezone.utc)
     user.mark_login_success()
     reset_token.mark_used()
 
@@ -84,13 +84,13 @@ def reset_password_with_token(db: Session, token: str, new_password: str) -> Opt
 def mark_failed_login(db: Session, user: User) -> None:
     user.increment_failed_login()
     if user.failed_login_attempts >= MAX_FAILED_LOGIN_ATTEMPTS:
-        user.account_locked_until = datetime.utcnow() + timedelta(minutes=LOGIN_LOCKOUT_MINUTES)
+        user.account_locked_until = datetime.now(timezone.utc) + timedelta(minutes=LOGIN_LOCKOUT_MINUTES)
     db.add(user)
     db.commit()
 
 
 def unlock_user_if_needed(db: Session, user: User) -> None:
-    if user.account_locked_until and datetime.utcnow() >= user.account_locked_until:
+    if user.account_locked_until and datetime.now(timezone.utc) >= user.account_locked_until:
         user.account_locked_until = None
         user.failed_login_attempts = 0
         db.add(user)

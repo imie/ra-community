@@ -6,7 +6,6 @@ from sqlalchemy.orm import Session
 
 from app.db.database import get_db
 from app.schemas.user import UserProfileUpdate, UserResponse
-from app.schemas.auth import TokenResponse
 from app.api.auth import get_current_user
 
 router = APIRouter(tags=["users"])

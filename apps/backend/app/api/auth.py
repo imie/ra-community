@@ -43,6 +43,10 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     user = get_user_by_email(db, token_data.get("email"))
     if user is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid authentication credentials")
+
+    if not user.is_active:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Account is inactive or suspended")
+
     return user
 
 
@@ -124,10 +128,13 @@ def refresh_token_route(request: RefreshTokenRequest, db: Session = Depends(get_
 def forgot_password(request: ForgotPasswordRequest, db: Session = Depends(get_db)) -> Any:
     user = get_user_by_email(db, request.email)
     if user is None:
-        return {"message": "Password reset email sent. Check your inbox.", "email_sent_to": request.email}
+        # Always return the same response to prevent user enumeration
+        return {"message": "If this email is registered, a password reset link has been sent."}
 
-    reset_token = create_password_reset_token(db, user)
-    return {"message": "Password reset email sent. Check your inbox.", "email_sent_to": request.email, "token": reset_token.token}
+    create_password_reset_token(db, user)
+    # TODO: Send reset_token.token to user.email via email service (e.g. SendGrid / SES).
+    # Never return the raw token in the HTTP response.
+    return {"message": "If this email is registered, a password reset link has been sent."}
 
 
 @router.post("/reset-password")
