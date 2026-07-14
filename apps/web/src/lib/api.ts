@@ -1,11 +1,19 @@
 /**
  * API client for the RA Community backend.
- * Reads the base URL from NEXT_PUBLIC_API_URL (falls back to localhost).
+ *
+ * Uses a relative "/api" base URL so that Next.js rewrite rules
+ * (next.config.js) proxy the request to the backend. This works in
+ * every environment — Docker, local dev, and production — without
+ * needing NEXT_PUBLIC_API_URL to be baked in at image build time.
+ *
+ * next.config.js rewrite: /api/:path* → BACKEND_URL/api/:path*
  */
 import axios from 'axios'
 
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
+  typeof window !== 'undefined'
+    ? '/api'  // browser: use Next.js rewrite proxy
+    : process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api' // SSR: direct
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
