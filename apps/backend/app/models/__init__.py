@@ -8,6 +8,7 @@ from app.models.user import (
     OAuthCredential,
     AuditLog
 )
+from app.models.announcement import Announcement
 
 __all__ = [
     "User",
@@ -15,4 +16,5 @@ __all__ = [
     "EmailVerificationToken",
     "OAuthCredential",
     "AuditLog",
+    "Announcement",
 ]
