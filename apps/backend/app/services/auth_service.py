@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.models.user import User, PasswordResetToken
 from app.utils.password import hash_password
+from app.utils.phone import normalize_phone_number
 
 PASSWORD_RESET_TOKEN_EXPIRE_HOURS = 24
 LOGIN_LOCKOUT_MINUTES = 15
@@ -26,7 +27,7 @@ def create_user(db: Session, email: str, password: str, full_name: str, phone_nu
         email=email.lower().strip(),
         password_hash=hashed_password,
         full_name=full_name.strip(),
-        phone_number=phone_number,
+        phone_number=normalize_phone_number(phone_number),
         is_active=True,
         status="active",
         is_verified=False,

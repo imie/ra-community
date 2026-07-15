@@ -32,6 +32,32 @@ export function stripIC(ic: string | null | undefined): string {
   return ic.replace(/[^0-9]/g, '')
 }
 
+export function formatPhone(phone: string | null | undefined): string {
+  if (!phone) return '—'
+  // Convert +60 back to 0 temporarily for display formatting
+  let clean = phone.replace(/[^0-9+]/g, '')
+  if (clean.startsWith('+6')) {
+    // If it's +6012..., replacing +6 gives 012...
+    clean = clean.replace('+6', '')
+  }
+  if (clean.length === 10) {
+    return `${clean.substring(0, 3)}-${clean.substring(3, 6)} ${clean.substring(6, 10)}`
+  }
+  if (clean.length === 11) {
+    return `${clean.substring(0, 3)}-${clean.substring(3, 7)} ${clean.substring(7, 11)}`
+  }
+  return phone
+}
+
+export function stripPhone(phone: string | null | undefined): string {
+  if (!phone) return ''
+  let clean = phone.replace(/[^0-9+]/g, '')
+  if (clean.startsWith('+6')) {
+    return clean.replace('+6', '')
+  }
+  return clean
+}
+
 export function formatSex(sex: string | null | undefined): string {
   if (sex === 'M') return 'Lelaki'
   if (sex === 'F') return 'Perempuan'

@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { useAuthStore } from '@hooks/useAuth'
 import apiClient from '@lib/api'
 import type { UserResponse } from '@types/index'
-import { formatIC, stripIC } from '@utils/index'
+import { formatIC, stripIC, formatPhone, stripPhone } from '@utils/index'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -278,7 +278,7 @@ export default function AdminPage() {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
                 <label style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>Phone Number</label>
-                <input value={editForm.phone_number ?? ''} onChange={e => setEditForm({ ...editForm, phone_number: e.target.value })} />
+                <input value={editForm.phone_number ? stripPhone(editForm.phone_number) : ''} onChange={e => setEditForm({ ...editForm, phone_number: e.target.value })} />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
                 <label style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>IC Number</label>
@@ -385,7 +385,7 @@ export default function AdminPage() {
         </div>
       </nav>
 
-      <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '2.5rem 1.5rem' }}>
+      <main style={{ maxWidth: '1920px', margin: '0 auto', padding: '2.5rem 1.5rem' }}>
 
         {/* Header row */}
         <div className="animate-fade-up" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
@@ -479,7 +479,7 @@ export default function AdminPage() {
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
                 <thead>
                   <tr style={{ background: 'var(--color-surface)', borderBottom: '2px solid var(--color-border)' }}>
-                    {['Name', 'Email', 'ID Number', 'Phone', 'Address', 'Role / Status', 'Member Since', 'Actions'].map((h) => (
+                    {['Name', 'Email', 'ID Number', 'Phone', 'Address', 'Occupancy', 'Role / Status', 'Member Since', 'Actions'].map((h) => (
                       <th key={h} style={{
                         padding: '0.875rem 1rem', textAlign: 'left',
                         fontSize: '0.75rem', fontWeight: 700,
@@ -492,7 +492,7 @@ export default function AdminPage() {
                 <tbody>
                   {data?.users.length === 0 && (
                     <tr>
-                      <td colSpan={8} style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>
+                      <td colSpan={9} style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>
                         No users found.
                       </td>
                     </tr>
@@ -529,11 +529,15 @@ export default function AdminPage() {
                       </td>
                       {/* Phone */}
                       <td style={{ padding: '0.875rem 1rem', color: 'var(--color-text-muted)', whiteSpace: 'nowrap' }}>
-                        {u.phone_number ?? '—'}
+                        {formatPhone(u.phone_number)}
                       </td>
                       {/* Address */}
                       <td style={{ padding: '0.875rem 1rem', color: 'var(--color-text-muted)' }}>
                         {[u.house_number, u.jalan_aman_serenia].filter(Boolean).join(', ') || '—'}
+                      </td>
+                      {/* Occupancy */}
+                      <td style={{ padding: '0.875rem 1rem', color: 'var(--color-text-muted)', textTransform: 'capitalize' }}>
+                        {u.resident_type || '—'}
                       </td>
                       {/* Role / Status */}
                       <td style={{ padding: '0.875rem 1rem' }}>

@@ -17,6 +17,7 @@ from app.schemas.user import UserResponse
 from app.schemas.admin import AdminUserUpdate, AdminUserListResponse, BulkImportResult
 from app.api.auth import get_current_user
 from app.utils.password import hash_password
+from app.utils.phone import normalize_phone_number
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
@@ -209,6 +210,8 @@ def update_user(
         if field == "password" and value:
             setattr(user, "password_hash", hash_password(value))
         else:
+            if field == "phone_number":
+                value = normalize_phone_number(value)
             setattr(user, field, value)
 
     db.add(user)
@@ -336,7 +339,7 @@ def import_users_excel(
             email=email,
             password_hash=hash_password(raw_pwd),
             full_name=full_name,
-            phone_number=val("phone_number"),
+            phone_number=normalize_phone_number(val("phone_number")),
             ic_number=val("ic_number"),
             passport_number=val("passport_number"),
             date_of_birth=dob,

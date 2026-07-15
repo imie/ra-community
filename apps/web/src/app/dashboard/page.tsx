@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { userApi } from '@lib/auth'
 import { useAuthStore } from '@hooks/useAuth'
 import type { UserResponse } from '@types/index'
-import { formatDate, formatIC, formatSex, formatRace, formatMaritalStatus } from '@utils/index'
+import { formatIC, formatSex, formatRace, formatMaritalStatus, formatDate, formatPhone } from '@utils/index'
 import apiClient from '@lib/api'
 
 export default function DashboardPage() {
@@ -64,7 +64,7 @@ export default function DashboardPage() {
 
   const profileFields: { label: string; value: string | null | undefined; icon: string }[] = [
     { icon: '📧', label: 'Email', value: user?.email },
-    { icon: '📞', label: 'Phone', value: user?.phone_number },
+    { icon: '📞', label: 'Phone', value: formatPhone(user?.phone_number) },
     { icon: '🪪', label: 'IC Number', value: formatIC(user?.ic_number) },
     { icon: '🛂', label: 'Passport No.', value: user?.passport_number },
     { icon: '🎂', label: 'Date of Birth', value: formatDate(user?.date_of_birth) },

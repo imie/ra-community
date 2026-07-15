@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { userApi } from '@lib/auth'
 import { useAuthStore } from '@hooks/useAuth'
 import type { UserProfileUpdate, UserSex, UserRace, MaritalStatus } from '@types/index'
-import { formatIC, stripIC } from '@utils/index'
+import { formatIC, stripIC, stripPhone } from '@utils/index'
 
 // ── Reusable field components ──────────────────────────────────────────────
 
@@ -39,6 +39,7 @@ type FormState = {
   full_name: string
   phone_number: string
   ic_number: string
+  passport_number: string
   date_of_birth: string
   place_of_birth: string
   sex: UserSex | ''
@@ -56,7 +57,7 @@ type FormState = {
 }
 
 const EMPTY: FormState = {
-  full_name: '', phone_number: '', ic_number: '', date_of_birth: '',
+  full_name: '', phone_number: '', ic_number: '', passport_number: '', date_of_birth: '',
   place_of_birth: '', sex: '', race: '', marital_status: '',
   num_dependents: '0', taman_name: '', house_number: '', jalan_aman_serenia: '',
   job_title: '', employer_name: '', employer_address: '', employer_phone: '',
@@ -87,8 +88,9 @@ export default function EditProfilePage() {
       if (!u) return
       setForm({
         full_name: u.full_name ?? '',
-        phone_number: u.phone_number ?? '',
+        phone_number: u.phone_number ? stripPhone(u.phone_number) : '',
         ic_number: u.ic_number ?? '',
+        passport_number: u.passport_number ?? '',
         date_of_birth: u.date_of_birth ?? '',
         place_of_birth: u.place_of_birth ?? '',
         sex: (u.sex as UserSex) ?? '',
