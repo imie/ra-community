@@ -15,31 +15,33 @@ export default function DashboardPage() {
   const user = useAuthStore((s) => s.user)
   const setUser = useAuthStore((s) => s.setUser)
   const [loading, setLoading] = useState(true)
-  const [hydrated, setHydrated] = useState(false)
+  // `mounted` ensures this runs only on the client after React hydration,
+  // by which point Zustand has already synchronously read localStorage.
+  const [mounted, setMounted] = useState(false)
 
-  // Wait for Zustand persist to rehydrate from localStorage before checking auth
   useEffect(() => {
-    const unsub = useAuthStore.persist.onFinishHydration(() => setHydrated(true))
-    if (useAuthStore.persist.hasHydrated()) setHydrated(true)
-    return unsub
+    setMounted(true)
   }, [])
 
   useEffect(() => {
-    if (!hydrated) return
-    if (!isAuthenticated()) { router.replace('/login'); return }
+    if (!mounted) return
+    if (!isAuthenticated()) {
+      router.replace('/login')
+      return
+    }
     userApi.getMe()
       .then((me: UserResponse) => setUser(me))
       .catch(() => { logout(); router.replace('/login') })
       .finally(() => setLoading(false))
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hydrated])
+  }, [mounted])
 
   function handleLogout() {
     logout()
     router.push('/login')
   }
 
-  if (!hydrated || loading) {
+  if (!mounted || loading) {
     return (
       <div style={{
         minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -51,7 +53,6 @@ export default function DashboardPage() {
     )
   }
 
-  // Avatar initials
   const initials = user?.full_name
     ?.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase() ?? '?'
 
@@ -90,7 +91,6 @@ export default function DashboardPage() {
           <span style={{ fontSize: '1.375rem' }}>🏡</span>
           <span style={{ fontWeight: 700, fontSize: '1rem', letterSpacing: '-0.02em' }}>RA Community</span>
         </Link>
-
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <div style={{
             display: 'flex', alignItems: 'center', gap: '0.625rem',
@@ -108,11 +108,8 @@ export default function DashboardPage() {
               {user?.full_name?.split(' ')[0] ?? 'Resident'}
             </span>
           </div>
-          <button
-            onClick={handleLogout}
-            className="btn-ghost"
-            style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}
-          >
+          <button onClick={handleLogout} className="btn-ghost"
+            style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}>
             Sign out
           </button>
         </div>
@@ -120,28 +117,23 @@ export default function DashboardPage() {
 
       {/* ── Main content ── */}
       <main style={{ maxWidth: '860px', margin: '0 auto', padding: '2.5rem 1.5rem' }}>
-
         {/* Profile hero card */}
         <div className="card animate-fade-up" style={{
           padding: '2rem', marginBottom: '1.5rem',
           background: 'var(--gradient-hero)', border: 'none',
           display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap',
         }}>
-          {/* Avatar */}
           <div style={{
             width: '5rem', height: '5rem', borderRadius: '50%',
             background: 'rgba(255,255,255,0.2)',
             border: '3px solid rgba(255,255,255,0.4)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '1.75rem', fontWeight: 800, color: '#fff',
-            flexShrink: 0,
+            fontSize: '1.75rem', fontWeight: 800, color: '#fff', flexShrink: 0,
           }}>{initials}</div>
-
           <div style={{ flex: 1 }}>
             <div style={{
               display: 'inline-flex', alignItems: 'center', gap: '0.375rem',
-              background: 'rgba(255,255,255,0.15)',
-              borderRadius: 'var(--radius-full)',
+              background: 'rgba(255,255,255,0.15)', borderRadius: 'var(--radius-full)',
               padding: '0.25rem 0.75rem',
               fontSize: '0.75rem', fontWeight: 600, color: 'rgba(255,255,255,0.85)',
               marginBottom: '0.5rem', textTransform: 'capitalize',
@@ -153,7 +145,6 @@ export default function DashboardPage() {
             </h1>
             <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.9375rem' }}>{user?.email}</p>
           </div>
-
           <Link href="/profile/edit" style={{
             display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
             padding: '0.625rem 1.25rem',
@@ -161,8 +152,7 @@ export default function DashboardPage() {
             border: '1.5px solid rgba(255,255,255,0.3)',
             borderRadius: 'var(--radius)',
             color: '#fff', fontWeight: 600, fontSize: '0.875rem',
-            backdropFilter: 'blur(8px)',
-            textDecoration: 'none',
+            backdropFilter: 'blur(8px)', textDecoration: 'none',
             transition: 'all var(--transition)',
           }}>
             ✏️ Edit Profile
@@ -177,7 +167,6 @@ export default function DashboardPage() {
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-            gap: '0',
           }}>
             {profileFields.map((field, i) => (
               <div key={field.label} style={{
@@ -191,7 +180,8 @@ export default function DashboardPage() {
                     {field.label}
                   </p>
                   <p style={{
-                    fontSize: '0.9375rem', color: field.value ? 'var(--color-text)' : 'var(--color-text-subtle)',
+                    fontSize: '0.9375rem',
+                    color: field.value ? 'var(--color-text)' : 'var(--color-text-subtle)',
                     fontStyle: field.value ? 'normal' : 'italic',
                     overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                   }}>
@@ -202,7 +192,6 @@ export default function DashboardPage() {
             ))}
           </div>
         </div>
-
       </main>
     </div>
   )

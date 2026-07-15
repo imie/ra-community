@@ -13,28 +13,27 @@
     "test:coverage": "jest --coverage"
   },
   "dependencies": {
-    "next": "^14.0.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "@hookform/resolvers": "^3.3.0",
-    "react-hook-form": "^7.47.0",
-    "zod": "^3.22.0",
-    "axios": "^1.6.0",
-    "zustand": "^4.4.0",
-    "clsx": "^2.0.0",
-    "tailwindcss": "^3.3.0"
+    "next": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "@hookform/resolvers": "latest",
+    "react-hook-form": "latest",
+    "zod": "latest",
+    "axios": "latest",
+    "zustand": "latest",
+    "clsx": "latest"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0",
-    "@types/react": "^18.2.0",
-    "@types/react-dom": "^18.2.0",
-    "typescript": "^5.2.0",
-    "autoprefixer": "^10.4.0",
-    "postcss": "^8.4.0",
-    "jest": "^29.7.0",
-    "@testing-library/react": "^14.0.0",
-    "@testing-library/jest-dom": "^6.1.0",
-    "eslint": "^8.50.0",
-    "eslint-config-next": "^14.0.0"
+    "@types/node": "latest",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "typescript": "latest",
+    "autoprefixer": "latest",
+    "postcss": "latest",
+    "jest": "latest",
+    "@testing-library/react": "latest",
+    "@testing-library/jest-dom": "latest",
+    "eslint": "latest",
+    "eslint-config-next": "latest"
   }
 }

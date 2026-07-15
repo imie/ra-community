@@ -1,27 +1,5 @@
 import Link from 'next/link'
-
-const features = [
-  {
-    icon: '🏘️',
-    title: 'Resident Directory',
-    desc: 'Manage resident profiles, contact details and household information in one place.',
-  },
-  {
-    icon: '📢',
-    title: 'Announcements',
-    desc: 'Broadcast notices, circulars and emergency alerts to all residents instantly.',
-  },
-  {
-    icon: '🗓️',
-    title: 'Facilities Booking',
-    desc: 'Reserve community halls, sports courts and amenities with an easy online system.',
-  },
-  {
-    icon: '🔒',
-    title: 'Secure & Private',
-    desc: 'Role-based access control keeps your community data safe and confidential.',
-  },
-]
+import FeatureCards from './FeatureCards'
 
 export default function HomePage() {
   return (
@@ -43,33 +21,19 @@ export default function HomePage() {
           </span>
         </div>
         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-          <Link
-            href="/login"
-            style={{
-              padding: '0.4375rem 1.125rem',
-              borderRadius: 'var(--radius)',
-              fontWeight: 600,
-              fontSize: '0.875rem',
-              color: 'var(--color-primary)',
-              border: '1.5px solid var(--color-primary-light)',
-              transition: 'all var(--transition)',
-            }}
-          >
+          <Link href="/login" style={{
+            padding: '0.4375rem 1.125rem', borderRadius: 'var(--radius)',
+            fontWeight: 600, fontSize: '0.875rem', color: 'var(--color-primary)',
+            border: '1.5px solid var(--color-primary-light)',
+          }}>
             Sign In
           </Link>
-          <Link
-            href="/register"
-            style={{
-              padding: '0.4375rem 1.125rem',
-              borderRadius: 'var(--radius)',
-              fontWeight: 600,
-              fontSize: '0.875rem',
-              color: '#fff',
-              background: 'var(--color-primary)',
-              boxShadow: '0 2px 8px rgba(37,99,235,0.25)',
-              transition: 'all var(--transition)',
-            }}
-          >
+          <Link href="/register" style={{
+            padding: '0.4375rem 1.125rem', borderRadius: 'var(--radius)',
+            fontWeight: 600, fontSize: '0.875rem', color: '#fff',
+            background: 'var(--color-primary)',
+            boxShadow: '0 2px 8px rgba(37,99,235,0.25)',
+          }}>
             Get Started
           </Link>
         </div>
@@ -83,154 +47,72 @@ export default function HomePage() {
         position: 'relative',
         overflow: 'hidden',
       }}>
-        {/* Decorative circles */}
         <div style={{
           position: 'absolute', top: '-5rem', right: '-5rem',
           width: '28rem', height: '28rem', borderRadius: '50%',
-          background: 'rgba(255,255,255,0.05)',
-          pointerEvents: 'none',
+          background: 'rgba(255,255,255,0.05)', pointerEvents: 'none',
         }} />
         <div style={{
           position: 'absolute', bottom: '-8rem', left: '-6rem',
           width: '32rem', height: '32rem', borderRadius: '50%',
-          background: 'rgba(255,255,255,0.04)',
-          pointerEvents: 'none',
+          background: 'rgba(255,255,255,0.04)', pointerEvents: 'none',
         }} />
-
         <div style={{ position: 'relative', maxWidth: '720px', margin: '0 auto' }} className="animate-fade-up">
           <div style={{
             display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
-            background: 'rgba(255,255,255,0.12)',
-            borderRadius: 'var(--radius-full)',
-            padding: '0.375rem 1rem',
-            fontSize: '0.8125rem', fontWeight: 600,
-            color: 'rgba(255,255,255,0.85)',
-            marginBottom: '1.75rem',
-            border: '1px solid rgba(255,255,255,0.2)',
-            backdropFilter: 'blur(8px)',
+            background: 'rgba(255,255,255,0.12)', borderRadius: 'var(--radius-full)',
+            padding: '0.375rem 1rem', fontSize: '0.8125rem', fontWeight: 600,
+            color: 'rgba(255,255,255,0.85)', marginBottom: '1.75rem',
+            border: '1px solid rgba(255,255,255,0.2)', backdropFilter: 'blur(8px)',
           }}>
             <span>✦</span> Serving Your Community
           </div>
-
           <h1 style={{
-            fontSize: 'clamp(2.25rem, 5vw, 3.5rem)',
-            fontWeight: 800,
-            color: '#ffffff',
-            marginBottom: '1.25rem',
-            letterSpacing: '-0.03em',
-            lineHeight: 1.15,
+            fontSize: 'clamp(2.25rem, 5vw, 3.5rem)', fontWeight: 800,
+            color: '#ffffff', marginBottom: '1.25rem',
+            letterSpacing: '-0.03em', lineHeight: 1.15,
           }}>
             Your Residence Association,<br />
             <span style={{ color: '#93c5fd' }}>Simplified.</span>
           </h1>
-
           <p style={{
-            fontSize: '1.125rem',
-            color: 'rgba(255,255,255,0.75)',
-            maxWidth: '520px',
-            margin: '0 auto 2.5rem',
-            lineHeight: 1.7,
+            fontSize: '1.125rem', color: 'rgba(255,255,255,0.75)',
+            maxWidth: '520px', margin: '0 auto 2.5rem', lineHeight: 1.7,
           }}>
             A modern platform for managing residents, facilities and community
             communications — all in one secure place.
           </p>
-
           <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Link
-              href="/register"
-              style={{
-                padding: '0.875rem 2rem',
-                borderRadius: 'var(--radius)',
-                background: '#fff',
-                color: 'var(--color-primary)',
-                fontWeight: 700,
-                fontSize: '1rem',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
-                transition: 'all var(--transition)',
-                display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
-              }}
-            >
+            <Link href="/register" style={{
+              padding: '0.875rem 2rem', borderRadius: 'var(--radius)',
+              background: '#fff', color: 'var(--color-primary)',
+              fontWeight: 700, fontSize: '1rem',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+              display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
+            }}>
               Create Account →
             </Link>
-            <Link
-              href="/login"
-              style={{
-                padding: '0.875rem 2rem',
-                borderRadius: 'var(--radius)',
-                background: 'rgba(255,255,255,0.12)',
-                color: '#fff',
-                fontWeight: 600,
-                fontSize: '1rem',
-                border: '1.5px solid rgba(255,255,255,0.25)',
-                backdropFilter: 'blur(8px)',
-                transition: 'all var(--transition)',
-              }}
-            >
+            <Link href="/login" style={{
+              padding: '0.875rem 2rem', borderRadius: 'var(--radius)',
+              background: 'rgba(255,255,255,0.12)', color: '#fff',
+              fontWeight: 600, fontSize: '1rem',
+              border: '1.5px solid rgba(255,255,255,0.25)',
+              backdropFilter: 'blur(8px)',
+            }}>
               Sign In
             </Link>
           </div>
         </div>
       </section>
 
-      {/* ── Features Grid ── */}
-      <section style={{
-        padding: '5rem 2rem',
-        background: 'var(--color-surface)',
-      }}>
-        <div style={{ maxWidth: '960px', margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: '3.5rem' }}>
-            <h2 style={{
-              fontSize: 'clamp(1.5rem, 3vw, 2.25rem)',
-              fontWeight: 800,
-              color: 'var(--color-text)',
-              marginBottom: '0.75rem',
-            }}>
-              Everything your community needs
-            </h2>
-            <p style={{ color: 'var(--color-text-muted)', fontSize: '1.0625rem', maxWidth: '480px', margin: '0 auto' }}>
-              Built for Malaysian residence associations — simple, fast and reliable.
-            </p>
-          </div>
-
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-            gap: '1.5rem',
-          }}>
-            {features.map((f) => (
-              <div
-                key={f.title}
-                className="card animate-fade-up"
-                style={{
-                  padding: '1.75rem',
-                  transition: 'transform var(--transition), box-shadow var(--transition)',
-                  cursor: 'default',
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-4px)'
-                  ;(e.currentTarget as HTMLDivElement).style.boxShadow = 'var(--shadow-lg)'
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)'
-                  ;(e.currentTarget as HTMLDivElement).style.boxShadow = 'var(--shadow-md)'
-                }}
-              >
-                <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>{f.icon}</div>
-                <h3 style={{ fontWeight: 700, marginBottom: '0.5rem', fontSize: '1.0625rem' }}>{f.title}</h3>
-                <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', lineHeight: 1.6 }}>{f.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* ── Features Grid (Client Component for hover effects) ── */}
+      <FeatureCards />
 
       {/* ── Footer ── */}
       <footer style={{
         borderTop: '1px solid var(--color-border)',
-        padding: '2rem',
-        textAlign: 'center',
-        color: 'var(--color-text-subtle)',
-        fontSize: '0.875rem',
+        padding: '2rem', textAlign: 'center',
+        color: 'var(--color-text-subtle)', fontSize: '0.875rem',
         background: 'var(--color-background)',
       }}>
         © {new Date().getFullYear()} RA Community Management · Built with ❤️ for Malaysian residents
