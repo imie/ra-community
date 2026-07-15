@@ -23,24 +23,47 @@ export const apiClient = axios.create({
   withCredentials: false,
 })
 
-// Attach Authorization header from localStorage when available
-apiClient.interceptors.request.use((config) => {
-  if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('access_token')
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
-    }
+/**
+ * Read the access token from Zustand's persisted localStorage entry.
+ *
+ * Zustand `persist` stores the whole auth state under the key "ra-auth":
+ *   { "state": { "access_token": "...", ... }, "version": 0 }
+ *
+ * The old code used localStorage.getItem('access_token') which always
+ * returned null, so every authenticated request was sent without a
+ * Bearer token → 401 → redirect back to /login.
+ */
+function getStoredToken(): string | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = localStorage.getItem('ra-auth')
+    if (!raw) return null
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (JSON.parse(raw) as any)?.state?.access_token ?? null
+  } catch {
+    return null
   }
+}
+
+/** Remove the entire persisted auth state on logout / 401. */
+function clearStoredAuth(): void {
+  if (typeof window === 'undefined') return
+  localStorage.removeItem('ra-auth')
+}
+
+// Attach Authorization header using the correct Zustand persist key
+apiClient.interceptors.request.use((config) => {
+  const token = getStoredToken()
+  if (token) config.headers.Authorization = `Bearer ${token}`
   return config
 })
 
-// Globally handle 401 — clear tokens and redirect to login
+// Globally handle 401 — clear persisted auth and redirect to login
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401 && typeof window !== 'undefined') {
-      localStorage.removeItem('access_token')
-      localStorage.removeItem('refresh_token')
+      clearStoredAuth()
       window.location.href = '/login'
     }
     return Promise.reject(error)
