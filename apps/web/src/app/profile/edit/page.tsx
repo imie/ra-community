@@ -109,7 +109,7 @@ export default function EditProfilePage() {
         .then((me) => { setUser(me); fill(me) })
         .catch(() => { logout(); router.replace('/login') })
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mounted])
 
   function handleChange(e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) {
@@ -125,22 +125,22 @@ export default function EditProfilePage() {
     setSuccess(false)
     try {
       const payload: UserProfileUpdate = {
-        full_name:          form.full_name       || undefined,
-        phone_number:       form.phone_number    || undefined,
-        ic_number:          form.ic_number       || undefined,
-        date_of_birth:      form.date_of_birth   || undefined,
-        place_of_birth:     form.place_of_birth  || undefined,
-        sex:                (form.sex  as UserSex)          || undefined,
-        race:               (form.race as UserRace)         || undefined,
-        marital_status:     (form.marital_status as MaritalStatus) || undefined,
-        num_dependents:     form.num_dependents !== '' ? Number(form.num_dependents) : undefined,
-        taman_name:         form.taman_name          || undefined,
-        house_number:       form.house_number        || undefined,
-        jalan_aman_serenia: form.jalan_aman_serenia  || undefined,
-        job_title:          form.job_title           || undefined,
-        employer_name:      form.employer_name       || undefined,
-        employer_address:   form.employer_address    || undefined,
-        employer_phone:     form.employer_phone      || undefined,
+        full_name: form.full_name || undefined,
+        phone_number: form.phone_number || undefined,
+        ic_number: form.ic_number || undefined,
+        date_of_birth: form.date_of_birth || undefined,
+        place_of_birth: form.place_of_birth || undefined,
+        sex: (form.sex as UserSex) || undefined,
+        race: (form.race as UserRace) || undefined,
+        marital_status: (form.marital_status as MaritalStatus) || undefined,
+        num_dependents: form.num_dependents !== '' ? Number(form.num_dependents) : undefined,
+        taman_name: form.taman_name || undefined,
+        house_number: form.house_number || undefined,
+        jalan_aman_serenia: form.jalan_aman_serenia || undefined,
+        job_title: form.job_title || undefined,
+        employer_name: form.employer_name || undefined,
+        employer_address: form.employer_address || undefined,
+        employer_phone: form.employer_phone || undefined,
       }
       const updated = await userApi.updateMe(payload)
       setUser(updated)

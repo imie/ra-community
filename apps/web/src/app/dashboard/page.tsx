@@ -92,6 +92,17 @@ export default function DashboardPage() {
           <span style={{ fontWeight: 700, fontSize: '1rem', letterSpacing: '-0.02em' }}>RA Community</span>
         </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          {user?.role === 'admin' && (
+            <Link href="/admin" style={{
+              display: 'inline-flex', alignItems: 'center', gap: '0.375rem',
+              padding: '0.4375rem 0.875rem', borderRadius: 'var(--radius)',
+              fontSize: '0.8125rem', fontWeight: 600,
+              color: '#7c3aed', background: 'rgba(124,58,237,0.08)',
+              border: '1px solid rgba(124,58,237,0.2)', textDecoration: 'none',
+            }}>
+              ⚙ Admin Panel
+            </Link>
+          )}
           <div style={{
             display: 'flex', alignItems: 'center', gap: '0.625rem',
             background: 'var(--color-surface)', borderRadius: 'var(--radius-full)',
