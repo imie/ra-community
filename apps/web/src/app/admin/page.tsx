@@ -479,7 +479,7 @@ export default function AdminPage() {
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
                 <thead>
                   <tr style={{ background: 'var(--color-surface)', borderBottom: '2px solid var(--color-border)' }}>
-                    {['Name / Email', 'ID Number', 'Phone', 'Taman', 'Role / Status', 'Member Since', 'Actions'].map((h) => (
+                    {['Name', 'Email', 'ID Number', 'Phone', 'Address', 'Role / Status', 'Member Since', 'Actions'].map((h) => (
                       <th key={h} style={{
                         padding: '0.875rem 1rem', textAlign: 'left',
                         fontSize: '0.75rem', fontWeight: 700,
@@ -492,7 +492,7 @@ export default function AdminPage() {
                 <tbody>
                   {data?.users.length === 0 && (
                     <tr>
-                      <td colSpan={7} style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>
+                      <td colSpan={8} style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>
                         No users found.
                       </td>
                     </tr>
@@ -503,7 +503,7 @@ export default function AdminPage() {
                       background: editingUser?.id === u.id ? 'rgba(37,99,235,0.03)' : 'transparent',
                       transition: 'background var(--transition)',
                     }}>
-                      {/* Name / Email */}
+                      {/* Name */}
                       <td style={{ padding: '0.875rem 1rem' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
                           <div style={{
@@ -516,9 +516,12 @@ export default function AdminPage() {
                           </div>
                           <div>
                             <p style={{ fontWeight: 600, color: 'var(--color-text)' }}>{u.full_name}</p>
-                            <p style={{ color: 'var(--color-text-muted)', fontSize: '0.8125rem' }}>{u.email}</p>
                           </div>
                         </div>
+                      </td>
+                      {/* Email */}
+                      <td style={{ padding: '0.875rem 1rem', color: 'var(--color-text-muted)' }}>
+                        {u.email}
                       </td>
                       {/* ID Number */}
                       <td style={{ padding: '0.875rem 1rem', color: 'var(--color-text-muted)' }}>
@@ -528,9 +531,9 @@ export default function AdminPage() {
                       <td style={{ padding: '0.875rem 1rem', color: 'var(--color-text-muted)', whiteSpace: 'nowrap' }}>
                         {u.phone_number ?? '—'}
                       </td>
-                      {/* Taman */}
+                      {/* Address */}
                       <td style={{ padding: '0.875rem 1rem', color: 'var(--color-text-muted)' }}>
-                        {u.taman_name ?? '—'}
+                        {[u.house_number, u.jalan_aman_serenia].filter(Boolean).join(', ') || '—'}
                       </td>
                       {/* Role / Status */}
                       <td style={{ padding: '0.875rem 1rem' }}>
