@@ -20,6 +20,21 @@ function LoginForm() {
     registered ? 'Account created! Please sign in.' : null
   )
   const [loading, setLoading] = useState(false)
+  const [checkingSession, setCheckingSession] = useState(true)
+
+  // On mount: check for an existing session and redirect if already logged in
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('ra-auth')
+      const token = raw ? (JSON.parse(raw) as { state?: { access_token?: string } })?.state?.access_token : null
+      if (token) {
+        router.replace('/dashboard')
+        return
+      }
+    } catch { /* ignore */ }
+    setCheckingSession(false)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     if (email || password) setSuccess(null)
@@ -43,6 +58,20 @@ function LoginForm() {
       setLoading(false)
     }
   }
+
+  // Show a spinner while we check for an existing session
+  if (checkingSession) {
+    return (
+      <div style={{
+        minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        flexDirection: 'column', gap: '1rem', background: 'var(--color-surface)',
+      }}>
+        <span className="spinner spinner-dark" style={{ width: '2rem', height: '2rem', borderWidth: '3px' }} />
+        <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9375rem' }}>Checking session…</p>
+      </div>
+    )
+  }
+
 
   return (
     <div style={{
