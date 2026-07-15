@@ -58,9 +58,10 @@ export interface UserResponse {
   email: string
   full_name: string
   role: UserRole
-  phone_number: string | null
-  ic_number: string | null
-  date_of_birth: string | null  // ISO date string (YYYY-MM-DD)
+  phone_number?: string | null
+  ic_number?: string | null
+  passport_number?: string | null
+  date_of_birth?: string | null  // ISO date string (YYYY-MM-DD)
   place_of_birth: string | null
   sex: UserSex | null
   race: UserRace | null
@@ -89,6 +90,7 @@ export interface UserProfileUpdate {
   full_name?: string
   phone_number?: string
   ic_number?: string
+  passport_number?: string
   date_of_birth?: string  // ISO date string YYYY-MM-DD
   place_of_birth?: string
   sex?: UserSex

@@ -12,6 +12,7 @@ class UserProfileUpdate(BaseModel):
     full_name: Optional[str] = None
     phone_number: Optional[str] = None
     ic_number: Optional[str] = None
+    passport_number: Optional[str] = None
     date_of_birth: Optional[date] = None
     place_of_birth: Optional[str] = None
     sex: Optional[str] = None
@@ -36,6 +37,7 @@ class UserResponse(BaseModel):
     role: str = "resident"
     phone_number: Optional[str] = None
     ic_number: Optional[str] = None
+    passport_number: Optional[str] = None
     date_of_birth: Optional[date] = None
     place_of_birth: Optional[str] = None
     sex: Optional[str] = None

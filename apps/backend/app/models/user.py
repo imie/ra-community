@@ -15,7 +15,8 @@ class User(Base):
     1. Email
     2. Full Name
     3. IC Number
-    4. Date of Birth
+    4. Passport Number
+    5. Date of Birth
     5. Place of Birth
     6. Age
     7. Sex
@@ -41,9 +42,10 @@ class User(Base):
     password_hash = Column(String(255), nullable=False)
     phone_number = Column(String(20), nullable=True, index=True)
 
-    # Core resident information (18 fields)
+    # Core resident information
     full_name = Column(String(255), nullable=False)
     ic_number = Column(String(50), unique=True, nullable=True, index=True)   # 1. IC Number
+    passport_number = Column(String(50), unique=True, nullable=True, index=True) # 2. Passport Number
     date_of_birth = Column(Date, nullable=True)                              # 2. Date of Birth
     place_of_birth = Column(String(255), nullable=True)                      # 3. Place of Birth
     age = Column(Integer, nullable=True)                                     # 4. Age

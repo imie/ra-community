@@ -12,6 +12,7 @@ class AdminUserUpdate(BaseModel):
     email: Optional[str] = None
     phone_number: Optional[str] = None
     ic_number: Optional[str] = None
+    passport_number: Optional[str] = None
     date_of_birth: Optional[str] = None
     place_of_birth: Optional[str] = None
     sex: Optional[str] = None

@@ -7,6 +7,7 @@ from typing import Any, List, Optional
 import io
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Query, status
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
 
@@ -54,6 +55,7 @@ def list_users(
                 User.full_name.ilike(term),
                 User.email.ilike(term),
                 User.ic_number.ilike(term),
+                User.passport_number.ilike(term),
                 User.phone_number.ilike(term),
             )
         )
@@ -72,6 +74,109 @@ def list_users(
         page=page,
         page_size=page_size,
         users=users,
+    )
+
+
+@router.get("/users/export")
+def export_users(
+    db: Session = Depends(get_db),
+    _admin: User = Depends(get_admin_user),
+):
+    """Export all users to an Excel file."""
+    try:
+        import openpyxl
+    except ImportError:
+        raise HTTPException(
+            status_code=500,
+            detail="openpyxl not installed on server. Contact administrator.",
+        )
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Users"
+
+    headers = [
+        "ID", "Email", "Full Name", "Phone Number", "IC Number", "Passport Number",
+        "Date of Birth", "Place of Birth", "Sex", "Race", "Marital Status", 
+        "Num Dependents", "Taman Name", "House Number", "Jalan", 
+        "Job Title", "Employer Name", "Employer Address", "Employer Phone", 
+        "Resident Type", "Committee Title", "Role", "Is Active", "Status", "Created At"
+    ]
+    ws.append(headers)
+
+    users = db.query(User).order_by(User.created_at.desc()).all()
+    for u in users:
+        row = [
+            str(u.id), u.email, u.full_name, u.phone_number, u.ic_number, u.passport_number,
+            u.date_of_birth.isoformat() if u.date_of_birth else None,
+            u.place_of_birth, u.sex, u.race, u.marital_status,
+            u.num_dependents, u.taman_name, u.house_number, u.jalan_aman_serenia,
+            u.job_title, u.employer_name, u.employer_address, u.employer_phone,
+            u.resident_type, u.committee_title, u.role, 
+            str(u.is_active), u.status, 
+            u.created_at.isoformat() if u.created_at else None
+        ]
+        ws.append(row)
+
+    stream = io.BytesIO()
+    wb.save(stream)
+    stream.seek(0)
+
+    headers = {
+        'Content-Disposition': 'attachment; filename="ra_users_export.xlsx"'
+    }
+    return StreamingResponse(
+        stream, 
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", 
+        headers=headers
+    )
+
+@router.get("/users/template")
+def download_template(
+    _admin: User = Depends(get_admin_user),
+):
+    """Generate an Excel template for importing users."""
+    try:
+        import openpyxl
+    except ImportError:
+        raise HTTPException(
+            status_code=500,
+            detail="openpyxl not installed on server. Contact administrator.",
+        )
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Import Template"
+
+    headers = [
+        "email", "full_name", "password", "phone_number", "ic_number", "passport_number",
+        "date_of_birth", "place_of_birth", "sex", "race", "marital_status",
+        "num_dependents", "taman_name", "house_number", "jalan_aman_serenia",
+        "job_title", "employer_name", "employer_address", "employer_phone",
+        "resident_type", "committee_title", "role", "is_active"
+    ]
+    ws.append(headers)
+
+    example = [
+        "resident@example.com", "Ahmad bin Ibrahim", "ChangeMe123!", "+60 12-345 6789",
+        "900101-14-5678", "", "1990-01-01", "Kuala Lumpur", "M", "Malay", "married",
+        2, "Serenia Amani", "12A", "Jalan Aman 3",
+        "Engineer", "Acme Sdn Bhd", "No 1 Jalan Tech", "+60 3-1234 5678",
+        "owner", "", "resident", "true"
+    ]
+    ws.append(example)
+
+    stream = io.BytesIO()
+    wb.save(stream)
+    stream.seek(0)
+
+    res_headers = {
+        'Content-Disposition': 'attachment; filename="ra_users_import_template.xlsx"'
+    }
+    return StreamingResponse(
+        stream, 
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", 
+        headers=res_headers
     )
 
 
@@ -138,7 +243,7 @@ def import_users_excel(
     Bulk-import users from an Excel (.xlsx) file.
 
     Expected columns (case-insensitive, order does not matter):
-      email*, full_name*, password*, phone_number, ic_number,
+      email*, full_name*, password*, phone_number, ic_number, passport_number,
       date_of_birth (YYYY-MM-DD), place_of_birth, sex, race,
       marital_status, num_dependents, taman_name, house_number,
       jalan_aman_serenia, job_title, employer_name,
@@ -233,6 +338,7 @@ def import_users_excel(
             full_name=full_name,
             phone_number=val("phone_number"),
             ic_number=val("ic_number"),
+            passport_number=val("passport_number"),
             date_of_birth=dob,
             place_of_birth=val("place_of_birth"),
             sex=val("sex"),

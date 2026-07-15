@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { userApi } from '@lib/auth'
 import { useAuthStore } from '@hooks/useAuth'
 import type { UserProfileUpdate, UserSex, UserRace, MaritalStatus } from '@types/index'
+import { formatIC, stripIC } from '@utils/index'
 
 // ── Reusable field components ──────────────────────────────────────────────
 
@@ -103,6 +104,9 @@ export default function EditProfilePage() {
         employer_phone: u.employer_phone ?? '',
         resident_type: (u.resident_type as 'owner' | 'tenant') ?? '',
       })
+      if (u.ic_number) {
+        setForm((prev) => ({ ...prev, ic_number: formatIC(u.ic_number) }))
+      }
       setLoading(false)
     }
 
@@ -116,7 +120,9 @@ export default function EditProfilePage() {
   }, [mounted])
 
   function handleChange(e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
+    let val = e.target.value
+    if (e.target.name === 'ic_number') val = formatIC(val)
+    setForm((prev) => ({ ...prev, [e.target.name]: val }))
     setSuccess(false)
     setError(null)
   }
@@ -130,7 +136,8 @@ export default function EditProfilePage() {
       const payload: UserProfileUpdate = {
         full_name: form.full_name || undefined,
         phone_number: form.phone_number || undefined,
-        ic_number: form.ic_number || undefined,
+        ic_number: form.ic_number ? stripIC(form.ic_number) : undefined,
+        passport_number: form.passport_number || undefined,
         date_of_birth: form.date_of_birth || undefined,
         place_of_birth: form.place_of_birth || undefined,
         sex: (form.sex as UserSex) || undefined,
@@ -254,6 +261,10 @@ export default function EditProfilePage() {
               <input name="ic_number" value={form.ic_number} onChange={handleChange} placeholder="e.g. 900101-14-5678" />
             </Field>
             <Field>
+              <L>Passport Number (For Foreigners)</L>
+              <input name="passport_number" value={form.passport_number ?? ''} onChange={handleChange} placeholder="e.g. A1234567" />
+            </Field>
+            <Field>
               <L>Date of Birth</L>
               <input name="date_of_birth" type="date" value={form.date_of_birth} onChange={handleChange} />
             </Field>
@@ -265,32 +276,32 @@ export default function EditProfilePage() {
               <L>Sex</L>
               <select name="sex" value={form.sex} onChange={handleChange}>
                 <option value="">— Select —</option>
-                <option value="M">Male</option>
-                <option value="F">Female</option>
-                <option value="Other">Other</option>
+                <option value="M">Lelaki</option>
+                <option value="F">Perempuan</option>
+                <option value="Other">Lain-lain</option>
               </select>
             </Field>
             <Field>
               <L>Race</L>
               <select name="race" value={form.race} onChange={handleChange}>
                 <option value="">— Select —</option>
-                <option value="Malay">Malay</option>
-                <option value="Chinese">Chinese</option>
-                <option value="Indian">Indian</option>
+                <option value="Malay">Melayu</option>
+                <option value="Chinese">Cina</option>
+                <option value="Indian">India</option>
                 <option value="Eurasian">Eurasian</option>
                 <option value="Kadazan">Kadazan</option>
                 <option value="Iban">Iban</option>
-                <option value="Other">Other</option>
+                <option value="Other">Lain-lain</option>
               </select>
             </Field>
             <Field>
               <L>Marital Status</L>
               <select name="marital_status" value={form.marital_status} onChange={handleChange}>
                 <option value="">— Select —</option>
-                <option value="single">Single</option>
-                <option value="married">Married</option>
-                <option value="divorced">Divorced</option>
-                <option value="widowed">Widowed</option>
+                <option value="single">Bujang</option>
+                <option value="married">Berkahwin</option>
+                <option value="divorced">Bercerai</option>
+                <option value="widowed">Balu/Duda</option>
               </select>
             </Field>
             <Field>

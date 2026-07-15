@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { userApi } from '@lib/auth'
 import { useAuthStore } from '@hooks/useAuth'
 import type { UserResponse } from '@types/index'
-import { formatDate } from '@utils/index'
+import { formatDate, formatIC, formatSex, formatRace, formatMaritalStatus } from '@utils/index'
 import apiClient from '@lib/api'
 
 export default function DashboardPage() {
@@ -65,11 +65,12 @@ export default function DashboardPage() {
   const profileFields: { label: string; value: string | null | undefined; icon: string }[] = [
     { icon: '📧', label: 'Email', value: user?.email },
     { icon: '📞', label: 'Phone', value: user?.phone_number },
-    { icon: '🪪', label: 'IC Number', value: user?.ic_number },
+    { icon: '🪪', label: 'IC Number', value: formatIC(user?.ic_number) },
+    { icon: '🛂', label: 'Passport No.', value: user?.passport_number },
     { icon: '🎂', label: 'Date of Birth', value: formatDate(user?.date_of_birth) },
-    { icon: '⚧', label: 'Sex', value: user?.sex },
-    { icon: '🌏', label: 'Race', value: user?.race },
-    { icon: '💍', label: 'Marital Status', value: user?.marital_status },
+    { icon: '⚧', label: 'Sex', value: formatSex(user?.sex) },
+    { icon: '🌏', label: 'Race', value: formatRace(user?.race) },
+    { icon: '💍', label: 'Marital Status', value: formatMaritalStatus(user?.marital_status) },
     { icon: '🏘️', label: 'Taman', value: user?.taman_name },
     { icon: '🏠', label: 'House No.', value: user?.house_number },
     { icon: '🛣️', label: 'Street', value: user?.jalan_aman_serenia },

@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useAuthStore } from '@hooks/useAuth'
 import apiClient from '@lib/api'
 import type { UserResponse } from '@types/index'
+import { formatIC, stripIC } from '@utils/index'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -69,8 +70,9 @@ export default function AdminPage() {
   const [roleFilter, setRoleFilter] = useState('')
   const [activeFilter, setActiveFilter] = useState('')
 
-  // Import state
+  // Import/Export state
   const [importing, setImporting] = useState(false)
+  const [exporting, setExporting] = useState(false)
   const [importResult, setImportResult] = useState<ImportResult | null>(null)
   const [importError, setImportError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -134,14 +136,15 @@ export default function AdminPage() {
 
   function startEdit(u: AdminUser) {
     setEditingUser(u)
-    setEditForm(u)
+    setEditForm({ ...u, ic_number: formatIC(u.ic_number) })
   }
 
   async function saveEdit() {
     if (!editingUser) return
     setSaving(true)
     try {
-      await apiClient.patch(`/admin/users/${editingUser.id}`, editForm)
+      const payload = { ...editForm, ic_number: stripIC(editForm.ic_number) }
+      await apiClient.patch(`/admin/users/${editingUser.id}`, payload)
       setEditingUser(null)
       fetchUsers()
     } catch { /* ignore */ }
@@ -183,27 +186,35 @@ export default function AdminPage() {
     }
   }
 
-  function downloadTemplate() {
-    const headers = [
-      'email', 'full_name', 'password', 'phone_number', 'ic_number',
-      'date_of_birth', 'place_of_birth', 'sex', 'race', 'marital_status',
-      'num_dependents', 'taman_name', 'house_number', 'jalan_aman_serenia',
-      'job_title', 'employer_name', 'employer_address', 'employer_phone',
-      'role', 'is_active',
-    ]
-    const example = [
-      'resident@example.com', 'Ahmad bin Ibrahim', 'ChangeMe123!', '+60 12-345 6789',
-      '900101-14-5678', '1990-01-01', 'Kuala Lumpur', 'M', 'Malay', 'married',
-      '2', 'Taman Aman', '12A', 'Jalan Aman 3',
-      'Engineer', 'Acme Sdn Bhd', 'No 1 Jalan Tech', '+60 3-1234 5678',
-      'resident', 'true',
-    ]
-    const csv = [headers.join(','), example.join(',')].join('\n')
-    const blob = new Blob([csv], { type: 'text/csv' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url; a.download = 'ra_users_import_template.csv'; a.click()
-    URL.revokeObjectURL(url)
+  async function downloadTemplate() {
+    try {
+      const { data: blob } = await apiClient.get('/admin/users/template', { responseType: 'blob' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'ra_users_import_template.xlsx'
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch {
+      alert('Failed to download template')
+    }
+  }
+
+  async function handleExport() {
+    setExporting(true)
+    try {
+      const { data: blob } = await apiClient.get('/admin/users/export', { responseType: 'blob' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'ra_users_export.xlsx'
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch {
+      alert('Failed to export users')
+    } finally {
+      setExporting(false)
+    }
   }
 
   // ── Initials ──────────────────────────────────────────────────────────────
@@ -271,7 +282,11 @@ export default function AdminPage() {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
                 <label style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>IC Number</label>
-                <input value={editForm.ic_number ?? ''} onChange={e => setEditForm({ ...editForm, ic_number: e.target.value })} />
+                <input value={editForm.ic_number ?? ''} onChange={e => setEditForm({ ...editForm, ic_number: formatIC(e.target.value) })} />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+                <label style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>Passport Number</label>
+                <input value={editForm.passport_number ?? ''} onChange={e => setEditForm({ ...editForm, passport_number: e.target.value })} />
               </div>
             </div>
 
@@ -387,6 +402,9 @@ export default function AdminPage() {
             <button onClick={downloadTemplate} className="btn-ghost" style={{ padding: '0.625rem 1rem', fontSize: '0.875rem' }}>
               ⬇ Download Template
             </button>
+            <button onClick={handleExport} disabled={exporting} className="btn-ghost" style={{ padding: '0.625rem 1rem', fontSize: '0.875rem' }}>
+              {exporting ? '⏳ Exporting...' : '📥 Export Excel'}
+            </button>
             <label style={{
               display: 'inline-flex', alignItems: 'center', gap: '0.375rem',
               padding: '0.625rem 1.125rem', borderRadius: 'var(--radius)',
@@ -461,7 +479,7 @@ export default function AdminPage() {
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
                 <thead>
                   <tr style={{ background: 'var(--color-surface)', borderBottom: '2px solid var(--color-border)' }}>
-                    {['Name / Email', 'IC Number', 'Phone', 'Taman', 'Role / Status', 'Member Since', 'Actions'].map((h) => (
+                    {['Name / Email', 'ID Number', 'Phone', 'Taman', 'Role / Status', 'Member Since', 'Actions'].map((h) => (
                       <th key={h} style={{
                         padding: '0.875rem 1rem', textAlign: 'left',
                         fontSize: '0.75rem', fontWeight: 700,
@@ -502,9 +520,9 @@ export default function AdminPage() {
                           </div>
                         </div>
                       </td>
-                      {/* IC */}
+                      {/* ID Number */}
                       <td style={{ padding: '0.875rem 1rem', color: 'var(--color-text-muted)' }}>
-                        {u.ic_number ?? '—'}
+                        {u.ic_number ? formatIC(u.ic_number) : u.passport_number ? u.passport_number : '—'}
                       </td>
                       {/* Phone */}
                       <td style={{ padding: '0.875rem 1rem', color: 'var(--color-text-muted)', whiteSpace: 'nowrap' }}>
