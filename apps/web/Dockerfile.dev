@@ -1,4 +1,5 @@
-FROM node:18-alpine
+# Node 22 LTS Alpine — required by Next.js 16, React 19, TypeScript 7
+FROM node:22-alpine
 
 WORKDIR /app
 
