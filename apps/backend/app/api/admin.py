@@ -221,7 +221,7 @@ def import_users_excel(
                 pass
 
         role_val = val("role") or "resident"
-        if role_val not in ("admin", "resident", "guest"):
+        if role_val not in ("admin", "resident"):
             role_val = "resident"
 
         is_active_val = val("is_active")
@@ -246,9 +246,12 @@ def import_users_excel(
             employer_name=val("employer_name"),
             employer_address=val("employer_address"),
             employer_phone=val("employer_phone"),
+            resident_type=val("resident_type"),
+            committee_title=val("committee_title"),
             role=role_val,
             is_active=active,
             is_verified=False,
+            status="active" if active else "deactivated",
         )
         db.add(user)
         created += 1

@@ -25,6 +25,7 @@ class UserProfileUpdate(BaseModel):
     employer_name: Optional[str] = None
     employer_address: Optional[str] = None
     employer_phone: Optional[str] = None
+    resident_type: Optional[str] = None
 
 
 class UserResponse(BaseModel):
@@ -46,6 +47,8 @@ class UserResponse(BaseModel):
     jalan_aman_serenia: Optional[str] = None
     job_title: Optional[str] = None
     employer_name: Optional[str] = None
+    resident_type: Optional[str] = None
+    committee_title: Optional[str] = None
     is_active: bool = False
     is_verified: bool = False
     created_at: datetime

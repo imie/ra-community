@@ -17,15 +17,7 @@ depends_on = None
 
 
 def upgrade() -> None:
-    # Create OAuth provider enum
-    op.execute("""
-        CREATE TYPE oauth_provider_enum AS ENUM (
-            'google',
-            'microsoft',
-            'apple',
-            'github'
-        )
-    """)
+
     
     # Create OAuth credentials table
     op.create_table(

@@ -69,11 +69,17 @@ class User(Base):
     employer_address = Column(String(255), nullable=True)                    # 14. Employer Address
     employer_phone = Column(String(20), nullable=True)                       # 15. Employer Phone
 
-    # Account management
+    # Account status
     role = Column(
-        SAEnum('admin', 'resident', 'guest', name='user_role_enum'),
-        nullable=False, server_default='resident'
+        SAEnum('admin', 'resident', name='user_role_enum'),
+        nullable=False,
+        server_default='resident'
     )
+    resident_type = Column(
+        SAEnum('owner', 'tenant', name='resident_type_enum'),
+        nullable=True
+    )
+    committee_title = Column(String(100), nullable=True)
     status = Column(
         SAEnum('pending', 'active', 'suspended', 'deactivated', name='user_status_enum'),
         nullable=False, server_default='pending', index=True

@@ -18,24 +18,7 @@ depends_on = None
 
 
 def upgrade() -> None:
-    # Create audit action enum
-    op.execute("""
-        CREATE TYPE audit_action_enum AS ENUM (
-            'create',
-            'update',
-            'delete',
-            'login',
-            'logout',
-            'password_reset',
-            'email_verification',
-            'profile_update',
-            'account_lock',
-            'account_unlock',
-            'permission_change',
-            'export',
-            'import'
-        )
-    """)
+
     
     # Create audit logs table for compliance and security tracking
     op.create_table(

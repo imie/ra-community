@@ -148,14 +148,38 @@ export default function DashboardPage() {
             fontSize: '1.75rem', fontWeight: 800, color: '#fff', flexShrink: 0,
           }}>{initials}</div>
           <div style={{ flex: 1 }}>
-            <div style={{
-              display: 'inline-flex', alignItems: 'center', gap: '0.375rem',
-              background: 'rgba(255,255,255,0.15)', borderRadius: 'var(--radius-full)',
-              padding: '0.25rem 0.75rem',
-              fontSize: '0.75rem', fontWeight: 600, color: 'rgba(255,255,255,0.85)',
-              marginBottom: '0.5rem', textTransform: 'capitalize',
-            }}>
-              ✦ {user?.role ?? 'Resident'}
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.5rem' }}>
+              <div style={{
+                display: 'inline-flex', alignItems: 'center', gap: '0.375rem',
+                background: 'rgba(255,255,255,0.15)', borderRadius: 'var(--radius-full)',
+                padding: '0.25rem 0.75rem',
+                fontSize: '0.75rem', fontWeight: 600, color: 'rgba(255,255,255,0.85)',
+                textTransform: 'capitalize',
+              }}>
+                ✦ {user?.role ?? 'Resident'}
+              </div>
+              {user?.resident_type && (
+                <div style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '0.375rem',
+                  background: 'rgba(255,255,255,0.15)', borderRadius: 'var(--radius-full)',
+                  padding: '0.25rem 0.75rem',
+                  fontSize: '0.75rem', fontWeight: 600, color: 'rgba(255,255,255,0.85)',
+                  textTransform: 'capitalize',
+                }}>
+                  {user.resident_type}
+                </div>
+              )}
+              {user?.committee_title && (
+                <div style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '0.375rem',
+                  background: 'rgba(56, 189, 248, 0.2)', borderRadius: 'var(--radius-full)',
+                  border: '1px solid rgba(56, 189, 248, 0.3)',
+                  padding: '0.25rem 0.75rem',
+                  fontSize: '0.75rem', fontWeight: 700, color: '#bae6fd',
+                }}>
+                  ⭐ {user.committee_title}
+                </div>
+              )}
             </div>
             <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#fff', marginBottom: '0.25rem' }}>
               {user?.full_name ?? '—'}

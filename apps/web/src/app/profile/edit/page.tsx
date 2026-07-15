@@ -51,6 +51,7 @@ type FormState = {
   employer_name: string
   employer_address: string
   employer_phone: string
+  resident_type: 'owner' | 'tenant' | ''
 }
 
 const EMPTY: FormState = {
@@ -58,6 +59,7 @@ const EMPTY: FormState = {
   place_of_birth: '', sex: '', race: '', marital_status: '',
   num_dependents: '0', taman_name: '', house_number: '', jalan_aman_serenia: '',
   job_title: '', employer_name: '', employer_address: '', employer_phone: '',
+  resident_type: '',
 }
 
 export default function EditProfilePage() {
@@ -99,6 +101,7 @@ export default function EditProfilePage() {
         employer_name: u.employer_name ?? '',
         employer_address: u.employer_address ?? '',
         employer_phone: u.employer_phone ?? '',
+        resident_type: (u.resident_type as 'owner' | 'tenant') ?? '',
       })
       setLoading(false)
     }
@@ -141,6 +144,7 @@ export default function EditProfilePage() {
         employer_name: form.employer_name || undefined,
         employer_address: form.employer_address || undefined,
         employer_phone: form.employer_phone || undefined,
+        resident_type: (form.resident_type as 'owner' | 'tenant') || undefined,
       }
       const updated = await userApi.updateMe(payload)
       setUser(updated)
@@ -308,11 +312,19 @@ export default function EditProfilePage() {
             </Field>
           </SectionCard>
 
-          {/* ── Address ── */}
-          <SectionCard title="Residential Address" icon="🏠">
+          {/* ── Address & Occupancy ── */}
+          <SectionCard title="Address & Occupancy" icon="🏠">
             <Field>
-              <L>Taman / Area Name</L>
-              <input name="taman_name" value={form.taman_name} onChange={handleChange} placeholder="e.g. Taman Aman Serenia" />
+              <L>Occupancy Status</L>
+              <select name="resident_type" value={form.resident_type} onChange={handleChange}>
+                <option value="">Select status...</option>
+                <option value="owner">Owner</option>
+                <option value="tenant">Tenant</option>
+              </select>
+            </Field>
+            <Field>
+              <L>Taman Name</L>
+              <input name="taman_name" value={form.taman_name} onChange={handleChange} placeholder="e.g. Taman Serenia" />
             </Field>
             <Field>
               <L>House / Unit Number</L>

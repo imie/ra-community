@@ -75,10 +75,9 @@ export default function AdminPage() {
   const [importError, setImportError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Inline edit state
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [editRole, setEditRole] = useState('')
-  const [editActive, setEditActive] = useState(false)
+  // Edit user state
+  const [editingUser, setEditingUser] = useState<AdminUser | null>(null)
+  const [editForm, setEditForm] = useState<Partial<AdminUser>>({})
   const [saving, setSaving] = useState(false)
 
   // Delete confirm
@@ -134,16 +133,16 @@ export default function AdminPage() {
   }
 
   function startEdit(u: AdminUser) {
-    setEditingId(u.id)
-    setEditRole(u.role)
-    setEditActive(u.is_active)
+    setEditingUser(u)
+    setEditForm(u)
   }
 
-  async function saveEdit(u: AdminUser) {
+  async function saveEdit() {
+    if (!editingUser) return
     setSaving(true)
     try {
-      await apiClient.patch(`/admin/users/${u.id}`, { role: editRole, is_active: editActive })
-      setEditingId(null)
+      await apiClient.patch(`/admin/users/${editingUser.id}`, editForm)
+      setEditingUser(null)
       fetchUsers()
     } catch { /* ignore */ }
     setSaving(false)
@@ -239,6 +238,93 @@ export default function AdminPage() {
                 background: '#dc2626', color: '#fff', border: 'none', cursor: 'pointer',
               }}>
                 {deleteLoading ? 'Deleting…' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Edit Modal ── */}
+      {editingUser && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 100,
+          background: 'rgba(0,0,0,0.45)', display: 'flex',
+          alignItems: 'center', justifyContent: 'center', padding: '1rem',
+        }}>
+          <div className="card animate-fade-up" style={{ maxWidth: '600px', width: '100%', maxHeight: '90vh', overflowY: 'auto', padding: '2rem' }}>
+            <h3 style={{ fontWeight: 800, fontSize: '1.25rem', marginBottom: '1.5rem', borderBottom: '1px solid var(--color-border)', paddingBottom: '0.75rem' }}>
+              Edit User: {editingUser.full_name}
+            </h3>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+                <label style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>Full Name</label>
+                <input value={editForm.full_name ?? ''} onChange={e => setEditForm({ ...editForm, full_name: e.target.value })} />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+                <label style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>Email</label>
+                <input value={editForm.email ?? ''} onChange={e => setEditForm({ ...editForm, email: e.target.value })} />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+                <label style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>Phone Number</label>
+                <input value={editForm.phone_number ?? ''} onChange={e => setEditForm({ ...editForm, phone_number: e.target.value })} />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+                <label style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>IC Number</label>
+                <input value={editForm.ic_number ?? ''} onChange={e => setEditForm({ ...editForm, ic_number: e.target.value })} />
+              </div>
+            </div>
+
+            <h4 style={{ fontWeight: 700, fontSize: '1rem', marginBottom: '1rem', color: 'var(--color-text)' }}>Role & Status</h4>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+                <label style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>System Role</label>
+                <select value={editForm.role ?? ''} onChange={e => setEditForm({ ...editForm, role: e.target.value })}>
+                  <option value="resident">Resident</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+                <label style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>Account Active</label>
+                <select value={String(editForm.is_active ?? true)} onChange={e => setEditForm({ ...editForm, is_active: e.target.value === 'true' })}>
+                  <option value="true">Active</option>
+                  <option value="false">Inactive</option>
+                </select>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+                <label style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>Occupancy Status</label>
+                <select value={editForm.resident_type ?? ''} onChange={e => setEditForm({ ...editForm, resident_type: e.target.value })}>
+                  <option value="">None</option>
+                  <option value="owner">Owner</option>
+                  <option value="tenant">Tenant</option>
+                </select>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+                <label style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>AJK Title</label>
+                <select value={editForm.committee_title ?? ''} onChange={e => setEditForm({ ...editForm, committee_title: e.target.value })}>
+                  <option value="">None</option>
+                  <option value="Pengerusi">Pengerusi</option>
+                  <option value="Timbalan Pengerusi 1">Timbalan Pengerusi 1</option>
+                  <option value="Timbalan Pengerusi 2">Timbalan Pengerusi 2</option>
+                  <option value="Timbalan Pengerusi 3">Timbalan Pengerusi 3</option>
+                  <option value="Bendahari">Bendahari</option>
+                  <option value="Timbalan Bendahari">Timbalan Bendahari</option>
+                  <option value="Setiausaha">Setiausaha</option>
+                  <option value="Timbalan Setiausaha">Timbalan Setiausaha</option>
+                  <option value="AJK">AJK</option>
+                </select>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '2rem' }}>
+              <button onClick={() => setEditingUser(null)} className="btn-ghost" style={{ padding: '0.625rem 1.25rem' }}>
+                Cancel
+              </button>
+              <button onClick={saveEdit} disabled={saving} style={{
+                padding: '0.625rem 1.25rem', borderRadius: 'var(--radius)', fontWeight: 600,
+                background: 'var(--color-primary)', color: '#fff', border: 'none', cursor: 'pointer',
+              }}>
+                {saving ? 'Saving…' : 'Save Changes'}
               </button>
             </div>
           </div>
@@ -348,7 +434,6 @@ export default function AdminPage() {
             <option value="">All Roles</option>
             <option value="admin">Admin</option>
             <option value="resident">Resident</option>
-            <option value="guest">Guest</option>
           </select>
           <select value={activeFilter} onChange={(e) => { setActiveFilter(e.target.value); setPage(1) }}
             style={{ width: '140px', fontSize: '0.875rem' }}>
@@ -397,7 +482,7 @@ export default function AdminPage() {
                   {data?.users.map((u, idx) => (
                     <tr key={u.id} style={{
                       borderBottom: idx < (data.users.length - 1) ? '1px solid var(--color-border)' : 'none',
-                      background: editingId === u.id ? 'rgba(37,99,235,0.03)' : 'transparent',
+                      background: editingUser?.id === u.id ? 'rgba(37,99,235,0.03)' : 'transparent',
                       transition: 'background var(--transition)',
                     }}>
                       {/* Name / Email */}
@@ -431,24 +516,9 @@ export default function AdminPage() {
                       </td>
                       {/* Role / Status */}
                       <td style={{ padding: '0.875rem 1rem' }}>
-                        {editingId === u.id ? (
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
-                            <select value={editRole} onChange={(e) => setEditRole(e.target.value)}
-                              style={{ fontSize: '0.8125rem', padding: '0.25rem 0.5rem' }}>
-                              <option value="resident">Resident</option>
-                              <option value="admin">Admin</option>
-                              <option value="guest">Guest</option>
-                            </select>
-                            <label style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.8125rem', cursor: 'pointer' }}>
-                              <input type="checkbox" checked={editActive} onChange={(e) => setEditActive(e.target.checked)} />
-                              Active
-                            </label>
-                          </div>
-                        ) : (
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem', alignItems: 'flex-start' }}>
-                            <Badge active={u.is_active} role={u.role} />
-                          </div>
-                        )}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem', alignItems: 'flex-start' }}>
+                          <Badge active={u.is_active} role={u.role} />
+                        </div>
                       </td>
                       {/* Date */}
                       <td style={{ padding: '0.875rem 1rem', color: 'var(--color-text-muted)', whiteSpace: 'nowrap', fontSize: '0.8125rem' }}>
@@ -457,33 +527,18 @@ export default function AdminPage() {
                       {/* Actions */}
                       <td style={{ padding: '0.875rem 1rem' }}>
                         <div style={{ display: 'flex', gap: '0.375rem', flexWrap: 'wrap' }}>
-                          {editingId === u.id ? (
-                            <>
-                              <button onClick={() => saveEdit(u)} disabled={saving}
-                                style={{ padding: '0.3125rem 0.75rem', borderRadius: 'var(--radius)', fontSize: '0.8125rem', fontWeight: 600, background: 'var(--color-primary)', color: '#fff', border: 'none', cursor: 'pointer' }}>
-                                {saving ? '…' : 'Save'}
-                              </button>
-                              <button onClick={() => setEditingId(null)}
-                                style={{ padding: '0.3125rem 0.75rem', borderRadius: 'var(--radius)', fontSize: '0.8125rem', fontWeight: 600, background: 'var(--color-surface)', color: 'var(--color-text-muted)', border: '1px solid var(--color-border)', cursor: 'pointer' }}>
-                                Cancel
-                              </button>
-                            </>
-                          ) : (
-                            <>
-                              <button onClick={() => startEdit(u)} title="Edit role / status"
-                                style={{ padding: '0.3125rem 0.625rem', borderRadius: 'var(--radius)', fontSize: '0.875rem', background: 'var(--color-surface)', border: '1px solid var(--color-border)', cursor: 'pointer' }}>
-                                ✏️
-                              </button>
-                              <button onClick={() => handleToggleActive(u)} title={u.is_active ? 'Deactivate' : 'Activate'}
-                                style={{ padding: '0.3125rem 0.625rem', borderRadius: 'var(--radius)', fontSize: '0.875rem', background: u.is_active ? 'rgba(239,68,68,0.08)' : 'rgba(16,185,129,0.08)', border: `1px solid ${u.is_active ? 'rgba(239,68,68,0.2)' : 'rgba(16,185,129,0.2)'}`, cursor: 'pointer' }}>
-                                {u.is_active ? '🚫' : '✅'}
-                              </button>
-                              <button onClick={() => setDeletingId(u.id)} title="Delete user"
-                                style={{ padding: '0.3125rem 0.625rem', borderRadius: 'var(--radius)', fontSize: '0.875rem', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', cursor: 'pointer' }}>
-                                🗑️
-                              </button>
-                            </>
-                          )}
+                          <button onClick={() => startEdit(u)} title="Edit user"
+                            style={{ padding: '0.3125rem 0.625rem', borderRadius: 'var(--radius)', fontSize: '0.875rem', background: 'var(--color-surface)', border: '1px solid var(--color-border)', cursor: 'pointer' }}>
+                            ✏️
+                          </button>
+                          <button onClick={() => handleToggleActive(u)} title={u.is_active ? 'Deactivate' : 'Activate'}
+                            style={{ padding: '0.3125rem 0.625rem', borderRadius: 'var(--radius)', fontSize: '0.875rem', background: u.is_active ? 'rgba(239,68,68,0.08)' : 'rgba(16,185,129,0.08)', border: `1px solid ${u.is_active ? 'rgba(239,68,68,0.2)' : 'rgba(16,185,129,0.2)'}`, cursor: 'pointer' }}>
+                            {u.is_active ? '🚫' : '✅'}
+                          </button>
+                          <button onClick={() => setDeletingId(u.id)} title="Delete user"
+                            style={{ padding: '0.3125rem 0.625rem', borderRadius: 'var(--radius)', fontSize: '0.875rem', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', cursor: 'pointer' }}>
+                            🗑️
+                          </button>
                         </div>
                       </td>
                     </tr>

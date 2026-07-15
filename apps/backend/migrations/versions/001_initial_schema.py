@@ -23,61 +23,7 @@ def upgrade() -> None:
     op.execute("CREATE EXTENSION IF NOT EXISTS \"pg_trgm\"")
     op.execute("CREATE EXTENSION IF NOT EXISTS \"unaccent\"")
     
-    # Create ENUM types
-    op.execute("""
-        CREATE TYPE user_role_enum AS ENUM (
-            'admin',
-            'resident',
-            'guest'
-        )
-    """)
-    
-    op.execute("""
-        CREATE TYPE user_status_enum AS ENUM (
-            'pending',
-            'active',
-            'suspended',
-            'deactivated'
-        )
-    """)
-    
-    op.execute("""
-        CREATE TYPE verification_status_enum AS ENUM (
-            'not_started',
-            'pending',
-            'verified',
-            'rejected'
-        )
-    """)
-    
-    op.execute("""
-        CREATE TYPE sex_enum AS ENUM (
-            'M',
-            'F',
-            'Other'
-        )
-    """)
-    
-    op.execute("""
-        CREATE TYPE race_enum AS ENUM (
-            'Malay',
-            'Chinese',
-            'Indian',
-            'Eurasian',
-            'Kadazan',
-            'Iban',
-            'Other'
-        )
-    """)
-    
-    op.execute("""
-        CREATE TYPE marital_status_enum AS ENUM (
-            'single',
-            'married',
-            'divorced',
-            'widowed'
-        )
-    """)
+
     
     # Create users table with all 18 data fields
     op.create_table(
@@ -109,8 +55,8 @@ def upgrade() -> None:
         sa.Column('employer_address', sa.String(255), nullable=True),
         sa.Column('employer_phone', sa.String(20), nullable=True),
         
-        # Account status and verification
-        sa.Column('role', sa.Enum('admin', 'resident', 'guest', name='user_role_enum'), nullable=False, server_default='resident'),
+        # Account status        # System/Security fields
+        sa.Column('role', sa.Enum('admin', 'resident', 'guest', name='user_role_enum'), nullable=False, server_default='guest'),
         sa.Column('status', sa.Enum('pending', 'active', 'suspended', 'deactivated', name='user_status_enum'), nullable=False, server_default='pending'),
         sa.Column('verification_status', sa.Enum('not_started', 'pending', 'verified', 'rejected', name='verification_status_enum'), nullable=False, server_default='not_started'),
         sa.Column('is_active', sa.Boolean, nullable=False, server_default='false'),

@@ -40,7 +40,8 @@ export interface PasswordResetRequest {
 
 // --------------- User ---------------
 
-export type UserRole = 'admin' | 'resident' | 'guest'
+export type UserRole = 'admin' | 'resident'
+export type ResidentType = 'owner' | 'tenant'
 export type UserSex = 'M' | 'F' | 'Other'
 export type UserRace =
   | 'Malay'
@@ -72,6 +73,8 @@ export interface UserResponse {
   employer_name: string | null
   employer_address: string | null
   employer_phone: string | null
+  resident_type: ResidentType | null
+  committee_title: string | null
   is_active: boolean
   is_verified: boolean
   created_at: string  // ISO datetime
@@ -99,4 +102,5 @@ export interface UserProfileUpdate {
   employer_name?: string
   employer_address?: string
   employer_phone?: string
+  resident_type?: ResidentType
 }

@@ -27,6 +27,9 @@ class AdminUserUpdate(BaseModel):
     employer_phone: Optional[str] = None
     # Admin-only fields
     role: Optional[str] = None
+    resident_type: Optional[str] = None
+    committee_title: Optional[str] = None
+    status: Optional[str] = None
     is_active: Optional[bool] = None
     is_verified: Optional[bool] = None
     password: Optional[str] = None  # If set, password_hash is updated
