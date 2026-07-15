@@ -7,6 +7,7 @@ import { userApi } from '@lib/auth'
 import { useAuthStore } from '@hooks/useAuth'
 import type { UserResponse } from '@types/index'
 import { formatDate } from '@utils/index'
+import apiClient from '@lib/api'
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -18,6 +19,7 @@ export default function DashboardPage() {
   // `mounted` ensures this runs only on the client after React hydration,
   // by which point Zustand has already synchronously read localStorage.
   const [mounted, setMounted] = useState(false)
+  const [announcements, setAnnouncements] = useState<any[]>([])
 
   useEffect(() => {
     setMounted(true)
@@ -30,7 +32,11 @@ export default function DashboardPage() {
       return
     }
     userApi.getMe()
-      .then((me: UserResponse) => setUser(me))
+      .then((me: UserResponse) => {
+        setUser(me)
+        return apiClient.get('/announcements', { params: { page: 1, page_size: 3 } })
+      })
+      .then((res: any) => setAnnouncements(res?.data?.announcements || []))
       .catch(() => { logout(); router.replace('/login') })
       .finally(() => setLoading(false))
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -168,6 +174,41 @@ export default function DashboardPage() {
           }}>
             ✏️ Edit Profile
           </Link>
+        </div>
+
+        {/* Latest Announcements */}
+        <div style={{ marginBottom: '2rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <h2 style={{ fontWeight: 700, fontSize: '1.125rem', color: 'var(--color-text)' }}>Latest Announcements</h2>
+            <Link href="/announcements" style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-primary)', textDecoration: 'none' }}>
+              View All →
+            </Link>
+          </div>
+          {announcements.length === 0 ? (
+            <div className="card animate-fade-up" style={{ padding: '1.5rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>
+              No recent announcements.
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))' }}>
+              {announcements.map((a, i) => (
+                <div key={a.id} className="card animate-fade-up" style={{ animationDelay: `${i * 50}ms`, padding: '1.25rem', borderLeft: a.priority === 'urgent' ? '4px solid #dc2626' : a.priority === 'high' ? '4px solid #ea580c' : '4px solid transparent' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                    <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--color-text)', display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{a.title}</h3>
+                  </div>
+                  <p style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', marginBottom: '0.75rem' }}>
+                    {a.content}
+                  </p>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--color-text-subtle)' }}>
+                      {new Date(a.created_at).toLocaleDateString('en-MY', { day: '2-digit', month: 'short' })}
+                    </span>
+                    {a.priority === 'urgent' && <span style={{ background: '#fee2e2', color: '#dc2626', padding: '0.125rem 0.375rem', borderRadius: 'var(--radius)', fontSize: '0.7rem', fontWeight: 700 }}>URGENT</span>}
+                    {a.priority === 'high' && <span style={{ background: '#ffedd5', color: '#ea580c', padding: '0.125rem 0.375rem', borderRadius: 'var(--radius)', fontSize: '0.7rem', fontWeight: 700 }}>HIGH</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Profile details */}

@@ -295,6 +295,9 @@ export default function AdminPage() {
             </p>
           </div>
           <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <Link href="/admin/announcements" className="btn-ghost" style={{ padding: '0.625rem 1rem', fontSize: '0.875rem', textDecoration: 'none' }}>
+              📢 Manage Announcements
+            </Link>
             <button onClick={downloadTemplate} className="btn-ghost" style={{ padding: '0.625rem 1rem', fontSize: '0.875rem' }}>
               ⬇ Download Template
             </button>
