@@ -5,13 +5,14 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuthStore } from '@hooks/useAuth'
 import apiClient from '@lib/api'
-import type { UserResponse } from '@types/index'
+import type { UserResponse, ResidentType } from '../../types/index'
 import { formatIC, stripIC, formatPhone, stripPhone } from '@utils/index'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
-interface AdminUser extends UserResponse {
+interface AdminUser extends Omit<UserResponse, 'role' | 'resident_type'> {
   role: string
+  resident_type: string | null | undefined
   is_active: boolean
   is_verified: boolean
   created_at: string
@@ -59,7 +60,6 @@ export default function AdminPage() {
   const router = useRouter()
   const user = useAuthStore((s) => s.user)
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
-  const logout = useAuthStore((s) => s.logout)
 
   const [mounted, setMounted] = useState(false)
   const [data, setData] = useState<PagedUsers | null>(null)
@@ -308,7 +308,7 @@ export default function AdminPage() {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
                 <label style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>Occupancy Status</label>
-                <select value={editForm.resident_type ?? ''} onChange={e => setEditForm({ ...editForm, resident_type: e.target.value })}>
+                <select value={editForm.resident_type ?? ''} onChange={e => setEditForm({ ...editForm, resident_type: (e.target.value as ResidentType) || undefined })}>
                   <option value="">None</option>
                   <option value="owner">Owner</option>
                   <option value="tenant">Tenant</option>
