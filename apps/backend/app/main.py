@@ -7,10 +7,14 @@ from contextlib import asynccontextmanager
 import os
 
 # Will be populated when setting up the project
+from app.db.database import Base, engine
+import app.models
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
     print("Application starting up...")
+    Base.metadata.create_all(bind=engine)
     yield
     # Shutdown
     print("Application shutting down...")
