@@ -24,6 +24,7 @@ export default function RegisterScreen() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [phone, setPhone] = useState('')
+  const [consentGiven, setConsentGiven] = useState(false)
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
@@ -34,6 +35,7 @@ export default function RegisterScreen() {
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) e.email = 'Enter a valid email'
     if (!password) e.password = 'Password is required'
     else if (password.length < 8) e.password = 'Password must be at least 8 characters'
+    if (!consentGiven) e.consent = 'You must agree to the Privacy Policy to register'
     setErrors(e)
     return Object.keys(e).length === 0
   }
@@ -135,6 +137,25 @@ export default function RegisterScreen() {
               hint="Optional — used for community notices"
             />
 
+            {/* Privacy Policy & Consent */}
+            <View style={styles.consentRow}>
+              <TouchableOpacity
+                style={[styles.checkbox, consentGiven && styles.checkboxChecked]}
+                onPress={() => setConsentGiven(!consentGiven)}
+                activeOpacity={0.8}
+              >
+                {consentGiven && <Text style={styles.checkmark}>✓</Text>}
+              </TouchableOpacity>
+              <Text style={styles.consentText}>
+                I agree to the collection of my personal data in accordance with the{' '}
+                <Text style={styles.privacyLink} onPress={() => router.push('/privacy-policy')}>
+                  Privacy Policy
+                </Text>
+                .
+              </Text>
+            </View>
+            {errors.consent && <Text style={styles.errorText}>{errors.consent}</Text>}
+
             <Button
               title="Create Account"
               onPress={handleRegister}
@@ -198,6 +219,47 @@ const styles = StyleSheet.create({
   },
   submitButton: {
     marginTop: Spacing.xs,
+  },
+  consentRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginVertical: Spacing.md,
+    gap: Spacing.sm,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    borderWidth: 1.5,
+    borderColor: Colors.muted,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 2,
+  },
+  checkboxChecked: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+  },
+  checkmark: {
+    color: Colors.white,
+    fontSize: 12,
+    fontWeight: FontWeight.bold,
+  },
+  consentText: {
+    flex: 1,
+    fontSize: FontSize.xs,
+    color: Colors.textSecondary,
+    lineHeight: 18,
+  },
+  privacyLink: {
+    color: Colors.primary,
+    fontWeight: FontWeight.semibold,
+    textDecorationLine: 'underline',
+  },
+  errorText: {
+    fontSize: FontSize.xs,
+    color: Colors.error,
+    marginBottom: Spacing.sm,
   },
   notice: {
     marginTop: Spacing.lg,

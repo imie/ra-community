@@ -47,6 +47,8 @@ export const userApi = {
 
   updateMe: (data: UserProfileUpdate) =>
     apiClient.put<UserResponse>('/users/me', data).then((r) => r.data),
+
+  deleteAccount: () => apiClient.delete('/users/me'),
 }
 
 // --------------- Announcements ---------------

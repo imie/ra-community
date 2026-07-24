@@ -55,6 +55,26 @@ export default function RootLayout() {
               headerTintColor: Colors.primary,
             }}
           />
+          <Stack.Screen
+            name="privacy-policy"
+            options={{
+              headerShown: true,
+              title: 'Privacy Policy',
+              headerBackTitle: 'Back',
+              headerStyle: { backgroundColor: Colors.white },
+              headerTintColor: Colors.primary,
+            }}
+          />
+          <Stack.Screen
+            name="delete-account"
+            options={{
+              headerShown: true,
+              title: 'Delete Account',
+              headerBackTitle: 'Back',
+              headerStyle: { backgroundColor: Colors.white },
+              headerTintColor: Colors.primary,
+            }}
+          />
         </Stack>
       </SafeAreaProvider>
     </GestureHandlerRootView>

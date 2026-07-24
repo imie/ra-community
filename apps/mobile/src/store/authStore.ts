@@ -21,6 +21,7 @@ interface AuthState {
   initialize: () => Promise<void>
   login: (data: LoginRequest) => Promise<void>
   logout: () => Promise<void>
+  deleteAccount: () => Promise<void>
   setUser: (user: UserResponse) => void
 }
 
@@ -86,6 +87,16 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   logout: async () => {
+    await Promise.all([
+      SecureStore.deleteItemAsync(STORAGE_KEYS.ACCESS_TOKEN),
+      SecureStore.deleteItemAsync(STORAGE_KEYS.REFRESH_TOKEN),
+      SecureStore.deleteItemAsync(STORAGE_KEYS.USER),
+    ])
+    set({ user: null, access_token: null, refresh_token: null })
+  },
+
+  deleteAccount: async () => {
+    await userApi.deleteAccount()
     await Promise.all([
       SecureStore.deleteItemAsync(STORAGE_KEYS.ACCESS_TOKEN),
       SecureStore.deleteItemAsync(STORAGE_KEYS.REFRESH_TOKEN),

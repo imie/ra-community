@@ -90,13 +90,28 @@ export default function SettingsScreen() {
         </View>
 
         {/* App section */}
-        <Text style={styles.sectionHeader}>APP</Text>
+        <Text style={styles.sectionHeader}>APP & PRIVACY</Text>
         <View style={styles.card}>
           <SettingRow emoji="📱" label="App Version" value="1.0.0" />
           <SettingRow emoji="🌐" label="API Environment" value="RA Community API" />
+          <SettingRow
+            emoji="📜"
+            label="Privacy Policy"
+            onPress={() => router.push('/privacy-policy')}
+          />
         </View>
 
         {/* Danger zone */}
+        <Text style={styles.sectionHeader}>ACCOUNT MANAGEMENT</Text>
+        <View style={styles.card}>
+          <SettingRow
+            emoji="⚠️"
+            label="Delete My Account"
+            danger
+            onPress={() => router.push('/delete-account')}
+          />
+        </View>
+
         <Text style={styles.sectionHeader}>SESSION</Text>
         <View style={styles.card}>
           <Button
