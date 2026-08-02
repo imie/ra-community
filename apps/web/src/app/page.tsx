@@ -1,36 +1,44 @@
+'use client'
+
+import { useEffect } from 'react'
 import Link from 'next/link'
 import FeatureCards from './FeatureCards'
+import { useCommunityStore } from '@hooks/useCommunitySettings'
 
 export default function HomePage() {
+  const communityName = useCommunityStore((s) => s.communityName)
+  const logoUrl = useCommunityStore((s) => s.logoUrl)
+  const fetchCommunitySettings = useCommunityStore((s) => s.fetchCommunitySettings)
+
+  useEffect(() => {
+    fetchCommunitySettings()
+  }, [fetchCommunitySettings])
+
   return (
     <>
       {/* ── Navigation Bar ── */}
-      <nav style={{
-        position: 'sticky', top: 0, zIndex: 50,
-        backdropFilter: 'blur(12px)',
-        backgroundColor: 'rgba(255,255,255,0.85)',
-        borderBottom: '1px solid var(--color-border)',
-        padding: '0 2rem',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        height: '4rem',
-      }}>
+      <nav className="app-nav">
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-          <span style={{ fontSize: '1.5rem' }}>🏡</span>
+          {logoUrl ? (
+            <img src={logoUrl} alt={communityName} style={{ width: '1.75rem', height: '1.75rem', borderRadius: '4px', objectFit: 'cover' }} />
+          ) : (
+            <span style={{ fontSize: '1.5rem' }}>🏡</span>
+          )}
           <span style={{ fontWeight: 700, fontSize: '1.0625rem', letterSpacing: '-0.02em', color: 'var(--color-text)' }}>
-            RA Community
+            {communityName}
           </span>
         </div>
-        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
           <Link href="/login" style={{
-            padding: '0.4375rem 1.125rem', borderRadius: 'var(--radius)',
-            fontWeight: 600, fontSize: '0.875rem', color: 'var(--color-primary)',
+            padding: '0.4375rem 0.875rem', borderRadius: 'var(--radius)',
+            fontWeight: 600, fontSize: '0.8125rem', color: 'var(--color-primary)',
             border: '1.5px solid var(--color-primary-light)',
           }}>
             Sign In
           </Link>
           <Link href="/register" style={{
-            padding: '0.4375rem 1.125rem', borderRadius: 'var(--radius)',
-            fontWeight: 600, fontSize: '0.875rem', color: '#fff',
+            padding: '0.4375rem 0.875rem', borderRadius: 'var(--radius)',
+            fontWeight: 600, fontSize: '0.8125rem', color: '#fff',
             background: 'var(--color-primary)',
             boxShadow: '0 2px 8px rgba(37,99,235,0.25)',
           }}>
@@ -115,7 +123,7 @@ export default function HomePage() {
         color: 'var(--color-text-subtle)', fontSize: '0.875rem',
         background: 'var(--color-background)',
       }}>
-        © {new Date().getFullYear()} RA Community Management · Built with ❤️ for Malaysian residents
+        © {new Date().getFullYear()} {communityName} · Built with ❤️ for Malaysian residents
       </footer>
     </>
   )

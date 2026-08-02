@@ -5,6 +5,7 @@ All routes require an active admin account (role == 'admin').
 """
 from typing import Any, List, Optional
 import io
+import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Query, status
 from fastapi.responses import StreamingResponse
@@ -188,7 +189,11 @@ def get_user(
     _admin: User = Depends(get_admin_user),
 ) -> Any:
     """Get a single user by ID."""
-    user = db.query(User).filter(User.id == user_id).first()
+    try:
+        uid = uuid.UUID(user_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid user ID format")
+    user = db.query(User).filter(User.id == uid).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
@@ -202,21 +207,41 @@ def update_user(
     _admin: User = Depends(get_admin_user),
 ) -> Any:
     """Admin can update role, is_active, is_verified and any profile field."""
-    user = db.query(User).filter(User.id == user_id).first()
+    try:
+        uid = uuid.UUID(user_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid user ID format")
+
+    user = db.query(User).filter(User.id == uid).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
     for field, value in update_data.model_dump(exclude_unset=True).items():
+        if isinstance(value, str):
+            value = value.strip()
+            if value in ("", "—", "-", "None"):
+                value = None
+
         if field == "password" and value:
             setattr(user, "password_hash", hash_password(value))
         else:
-            if field == "phone_number":
+            if field == "phone_number" and value:
                 value = normalize_phone_number(value)
             setattr(user, field, value)
 
-    db.add(user)
-    db.commit()
-    db.refresh(user)
+    try:
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+    except Exception as e:
+        db.rollback()
+        err_msg = str(e)
+        if "UNIQUE constraint failed" in err_msg or "ic_number" in err_msg or "passport_number" in err_msg:
+            raise HTTPException(
+                status_code=400,
+                detail="IC Number or Passport Number is already registered to another account",
+            )
+        raise HTTPException(status_code=400, detail=f"Database update error: {err_msg}")
     return user
 
 
@@ -229,7 +254,11 @@ def delete_user(
     """Permanently delete a user. Admin cannot delete themselves."""
     if str(admin.id) == user_id:
         raise HTTPException(status_code=400, detail="Cannot delete your own account")
-    user = db.query(User).filter(User.id == user_id).first()
+    try:
+        uid = uuid.UUID(user_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid user ID format")
+    user = db.query(User).filter(User.id == uid).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     db.delete(user)

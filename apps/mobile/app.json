@@ -41,10 +41,6 @@
         "android.permission.INTERNET"
       ]
     },
-    "web": {
-      "bundler": "metro",
-      "favicon": "./assets/favicon.png"
-    },
     "plugins": [
       "expo-router"
     ]

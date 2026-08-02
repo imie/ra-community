@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>RA Community — Mobile App Simulator</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --primary: #1D4ED8;
+    --primary-light: #3B82F6;
+    --accent: #10B981;
+    --white: #FFFFFF;
+    --bg: #F8FAFC;
+    --surface: #FFFFFF;
+    --border: #E2E8F0;
+    --muted: #94A3B8;
+    --text: #0F172A;
+    --text-sec: #475569;
+    --error: #EF4444;
+    --warning: #F59E0B;
+    --success: #10B981;
+    --urgent: #EF4444;
+    --high: #F97316;
+    --normal: #3B82F6;
+    --low: #6B7280;
+    --shadow: 0 4px 20px rgba(0,0,0,0.12);
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #0f172a 100%);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+    gap: 24px;
+  }
+
+  h1.sim-title {
+    color: white;
+    font-size: 1.5rem;
+    font-weight: 700;
+    opacity: 0.9;
+    letter-spacing: -0.02em;
+  }
+
+  .nav-tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .nav-btn {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Inter', sans-serif;
+  }
+  .nav-btn:hover { background: rgba(255,255,255,0.2); }
+  .nav-btn.active { background: var(--primary); border-color: var(--primary); }
+
+  /* Phone frame */
+  .phone {
+    width: 390px;
+    height: 844px;
+    background: #000;
+    border-radius: 54px;
+    padding: 14px;
+    box-shadow: 0 40px 80px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.1);
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .phone-screen {
+    width: 100%;
+    height: 100%;
+    background: var(--bg);
+    border-radius: 42px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  /* Status bar */
+  .status-bar {
+    background: var(--white);
+    height: 48px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding: 0 28px 8px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    flex-shrink: 0;
+    border-radius: 42px 42px 0 0;
+  }
+
+  .status-icons { display: flex; gap: 6px; align-items: center; font-size: 11px; }
+
+  /* Screen container */
+  .screen { display: none; flex: 1; overflow-y: auto; flex-direction: column; }
+  .screen.active { display: flex; }
+  .screen::-webkit-scrollbar { display: none; }
+
+  /* ── AUTH SCREENS ── */
+  .auth-bg {
+    flex: 1;
+    background: var(--bg);
+    padding: 24px 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .logo-circle {
+    width: 72px; height: 72px; border-radius: 50%;
+    background: rgba(29,78,216,0.1);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 32px; margin: 0 auto 12px;
+  }
+
+  .app-name { text-align: center; font-size: 26px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+  .app-tagline { text-align: center; font-size: 12px; color: var(--muted); margin-bottom: 28px; }
+
+  .auth-card {
+    background: var(--white);
+    border-radius: 24px;
+    padding: 24px;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  }
+
+  .auth-card-title { font-size: 22px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+  .auth-card-sub { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 12px; font-weight: 600; color: var(--text-sec); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .field input, .field select {
+    width: 100%; padding: 13px 14px;
+    border: 1.5px solid var(--border); border-radius: 10px;
+    font-size: 14px; color: var(--text); background: var(--white);
+    font-family: 'Inter', sans-serif; outline: none;
+  }
+  .field input.pass { color: transparent; text-shadow: 0 0 8px rgba(0,0,0,0.5); letter-spacing: 6px; font-size: 16px; }
+
+  .btn {
+    width: 100%; padding: 14px;
+    border: none; border-radius: 10px;
+    font-size: 15px; font-weight: 600;
+    cursor: pointer; font-family: 'Inter', sans-serif;
+    transition: opacity 0.15s;
+  }
+  .btn-primary { background: var(--primary); color: white; }
+  .btn-secondary { background: transparent; border: 1.5px solid var(--primary); color: var(--primary); }
+  .btn-danger { background: var(--error); color: white; }
+  .btn:active { opacity: 0.85; }
+
+  .forgot-link { text-align: right; font-size: 12px; color: var(--primary); font-weight: 600; margin: -8px 0 14px; cursor: pointer; }
+
+  .auth-footer { text-align: center; margin-top: 20px; font-size: 13px; color: var(--muted); }
+  .auth-footer a { color: var(--primary); font-weight: 600; cursor: pointer; }
+
+  .back-link { font-size: 13px; color: var(--primary); font-weight: 600; margin-bottom: 20px; cursor: pointer; }
+
+  /* ── TABS ── */
+  .tab-bar {
+    height: 62px; background: var(--white);
+    border-top: 1px solid var(--border);
+    display: flex; align-items: stretch;
+    flex-shrink: 0;
+  }
+  .tab-item {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 3px; cursor: pointer; font-size: 10px;
+    font-weight: 500; color: var(--muted);
+    transition: color 0.15s;
+  }
+  .tab-item.active { color: var(--primary); }
+  .tab-icon { font-size: 22px; }
+
+  /* ── APP HEADER ── */
+  .app-header {
+    background: var(--white); border-bottom: 1px solid var(--border);
+    padding: 14px 20px; display: flex; align-items: center;
+    justify-content: space-between; flex-shrink: 0;
+  }
+  .app-header h2 { font-size: 17px; font-weight: 700; color: var(--text); }
+
+  /* ── HOME / ANNOUNCEMENTS ── */
+  .feed-scroll { flex: 1; padding: 14px 16px; overflow-y: auto; }
+  .feed-scroll::-webkit-scrollbar { display: none; }
+
+  .feed-label { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+
+  .announcement-card {
+    background: var(--white); border-radius: 16px;
+    padding: 14px; margin-bottom: 12px;
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .announcement-card:active { transform: scale(0.98); box-shadow: none; }
+
+  .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+
+  .priority-badge {
+    display: flex; align-items: center; gap: 4px;
+    padding: 3px 8px; border-radius: 999px;
+    font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .badge-dot { width: 5px; height: 5px; border-radius: 50%; }
+
+  .card-date { font-size: 10px; color: var(--muted); }
+  .card-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 6px; line-height: 1.3; }
+  .card-preview { font-size: 12px; color: var(--text-sec); line-height: 1.5; margin-bottom: 8px; }
+  .read-more { font-size: 12px; color: var(--primary); font-weight: 600; }
+
+  /* ── PROFILE ── */
+  .profile-banner {
+    background: var(--white); padding: 24px 20px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex; flex-direction: column; align-items: center; text-align: center;
+    flex-shrink: 0;
+  }
+  .avatar {
+    width: 70px; height: 70px; border-radius: 50%;
+    background: var(--primary); color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; font-weight: 800; margin-bottom: 10px;
+  }
+  .profile-name { font-size: 19px; font-weight: 800; color: var(--text); }
+  .profile-email { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+  .badge-row { display: flex; gap: 8px; }
+  .status-badge {
+    padding: 4px 10px; border-radius: 999px;
+    font-size: 10px; font-weight: 700;
+  }
+
+  .profile-action-row {
+    padding: 10px 16px; background: var(--white);
+    border-bottom: 1px solid var(--border); flex-shrink: 0;
+  }
+  .profile-tab-row {
+    display: flex; background: var(--white);
+    border-bottom: 1px solid var(--border); flex-shrink: 0;
+  }
+  .profile-tab {
+    flex: 1; text-align: center; padding: 10px 4px;
+    font-size: 11px; font-weight: 600; color: var(--muted);
+    cursor: pointer; border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+  }
+  .profile-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+  .profile-section {
+    background: var(--white); margin: 12px 12px;
+    border-radius: 16px; padding: 4px 14px;
+    border: 1px solid var(--border); flex-shrink: 0;
+  }
+  .profile-field {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 11px 0; border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .profile-field:last-child { border-bottom: none; }
+  .field-label { color: var(--text-sec); font-weight: 600; font-size: 12px; }
+  .field-value { color: var(--text); font-weight: 500; text-align: right; max-width: 55%; }
+  .field-empty { color: var(--muted); }
+
+  /* ── SETTINGS ── */
+  .settings-section-label {
+    font-size: 10px; font-weight: 700; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.08em;
+    padding: 16px 16px 6px;
+  }
+  .settings-card { background: var(--white); margin: 0 12px 4px; border-radius: 14px; border: 1px solid var(--border); overflow: hidden; }
+  .settings-row {
+    display: flex; align-items: center; padding: 13px 14px;
+    border-bottom: 1px solid var(--border); gap: 10px;
+  }
+  .settings-row:last-child { border-bottom: none; }
+  .settings-emoji { font-size: 18px; }
+  .settings-content { flex: 1; }
+  .settings-label { font-size: 14px; font-weight: 500; color: var(--text); }
+  .settings-value { font-size: 11px; color: var(--muted); margin-top: 1px; }
+  .settings-chevron { color: var(--muted); font-size: 18px; }
+
+  /* ── ANNOUNCEMENT DETAIL ── */
+  .detail-screen {
+    flex: 1; background: var(--white);
+    padding: 16px 18px; overflow-y: auto;
+  }
+  .detail-screen::-webkit-scrollbar { display: none; }
+  .detail-back {
+    font-size: 13px; color: var(--primary); font-weight: 600;
+    cursor: pointer; margin-bottom: 14px; display: flex; align-items: center; gap: 4px;
+  }
+  .detail-meta { display: flex; justify-content: space-between; margin-bottom: 12px; }
+  .detail-title { font-size: 20px; font-weight: 800; color: var(--text); line-height: 1.3; margin-bottom: 12px; }
+  .detail-divider { height: 1px; background: var(--border); margin-bottom: 14px; }
+  .detail-content { font-size: 14px; color: var(--text-sec); line-height: 1.7; }
+  .detail-footer { margin-top: 20px; padding-top: 12px; border-top: 1px solid var(--border); font-size: 11px; color: var(--muted); }
+
+  /* ── FORGOT / SUCCESS ── */
+  .success-card {
+    background: var(--white); border-radius: 20px; padding: 28px 20px;
+    border: 1px solid var(--border); box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    text-align: center;
+  }
+  .success-icon { font-size: 44px; margin-bottom: 14px; }
+  .success-title { font-size: 18px; font-weight: 800; color: var(--text); margin-bottom: 8px; }
+  .success-text { font-size: 13px; color: var(--text-sec); line-height: 1.5; margin-bottom: 20px; }
+
+  .notice-box {
+    background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.2);
+    border-radius: 12px; padding: 12px 14px; margin-top: 14px;
+    font-size: 12px; color: var(--primary-light); line-height: 1.5;
+  }
+
+  /* Scrollable tab content */
+  .tab-content { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+  .tab-content::-webkit-scrollbar { display: none; }
+
+  /* Register screen scrollable */
+  .register-scroll { flex: 1; overflow-y: auto; padding: 20px; }
+  .register-scroll::-webkit-scrollbar { display: none; }
+</style>
+</head>
+<body>
+
+<h1 class="sim-title">📱 RA Community — Mobile App Simulator</h1>
+
+<div class="nav-tabs">
+  <button class="nav-btn active" onclick="showScreen('login')">Login</button>
+  <button class="nav-btn" onclick="showScreen('register')">Register</button>
+  <button class="nav-btn" onclick="showScreen('forgot')">Forgot PW</button>
+  <button class="nav-btn" onclick="showScreen('home')">Home (Feed)</button>
+  <button class="nav-btn" onclick="showScreen('detail')">Announcement</button>
+  <button class="nav-btn" onclick="showScreen('profile')">Profile</button>
+  <button class="nav-btn" onclick="showScreen('settings')">Settings</button>
+</div>
+
+<div class="phone">
+  <div class="phone-screen">
+
+    <!-- Status Bar -->
+    <div class="status-bar" id="statusBar">
+      <span>9:42</span>
+      <div class="status-icons">
+        <span>●●●</span>
+        <span>WiFi</span>
+        <span>🔋</span>
+      </div>
+    </div>
+
+    <!-- ══════════════ LOGIN ══════════════ -->
+    <div class="screen active" id="screen-login">
+      <div class="auth-bg">
+        <div class="logo-circle">🏘️</div>
+        <div class="app-name">RA Community</div>
+        <div class="app-tagline">Residence Association Management</div>
+
+        <div class="auth-card">
+          <div class="auth-card-title">Welcome back</div>
+          <div class="auth-card-sub">Sign in to your account</div>
+
+          <div class="field">
+            <label>Email Address <span style="color:var(--error)">*</span></label>
+            <input type="text" value="ahmad@example.com" readonly/>
+          </div>
+          <div class="field">
+            <label>Password <span style="color:var(--error)">*</span></label>
+            <input class="pass" type="text" value="••••••••" readonly/>
+          </div>
+
+          <div class="forgot-link" onclick="showScreen('forgot')">Forgot password?</div>
+
+          <button class="btn btn-primary" onclick="showScreen('home')">Sign In</button>
+        </div>
+
+        <div class="auth-footer">
+          Don't have an account? <a onclick="showScreen('register')">Register</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ REGISTER ══════════════ -->
+    <div class="screen" id="screen-register">
+      <div class="register-scroll">
+        <div class="back-link" onclick="showScreen('login')">← Back to Login</div>
+
+        <div style="margin-bottom: 20px;">
+          <div style="font-size: 24px; font-weight: 800; color: var(--text); margin-bottom: 4px;">Create Account</div>
+          <div style="font-size: 13px; color: var(--muted);">Register as a resident of RA Community</div>
+        </div>
+
+        <div class="auth-card">
+          <div class="field">
+            <label>Full Name <span style="color:var(--error)">*</span></label>
+            <input type="text" value="Ahmad bin Abdullah" readonly/>
+          </div>
+          <div class="field">
+            <label>Email Address <span style="color:var(--error)">*</span></label>
+            <input type="text" value="ahmad@example.com" readonly/>
+          </div>
+          <div class="field">
+            <label>Password <span style="color:var(--error)">*</span></label>
+            <input class="pass" type="text" value="••••••••" readonly/>
+          </div>
+          <div class="field">
+            <label>Phone Number</label>
+            <input type="text" value="+60 12-345 6789" readonly/>
+          </div>
+          <button class="btn btn-primary" style="margin-top: 4px;">Create Account</button>
+        </div>
+
+        <div class="notice-box">
+          ℹ️ Your account will require admin approval before you can access the community portal.
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ FORGOT PASSWORD ══════════════ -->
+    <div class="screen" id="screen-forgot">
+      <div class="auth-bg" style="justify-content: flex-start; padding-top: 20px;">
+        <div class="back-link" onclick="showScreen('login')">← Back to Login</div>
+        <div style="font-size: 36px; margin-bottom: 12px;">🔑</div>
+        <div style="font-size: 24px; font-weight: 800; color: var(--text); margin-bottom: 8px;">Reset Password</div>
+        <div style="font-size: 13px; color: var(--muted); margin-bottom: 24px; line-height: 1.5;">Enter your registered email and we'll send you a reset link.</div>
+
+        <div class="success-card" id="forgot-form-card">
+          <div class="field" style="margin-bottom: 16px;">
+            <label>Email Address <span style="color:var(--error)">*</span></label>
+            <input type="text" value="ahmad@example.com" readonly/>
+          </div>
+          <button class="btn btn-primary" onclick="showForgotSuccess()">Send Reset Link</button>
+        </div>
+
+        <div class="success-card" id="forgot-success-card" style="display:none;">
+          <div class="success-icon">✅</div>
+          <div class="success-title">Check your email</div>
+          <div class="success-text">If <strong>ahmad@example.com</strong> is registered, a password reset link has been sent.</div>
+          <button class="btn btn-primary" onclick="showScreen('login')">Back to Login</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ HOME (ANNOUNCEMENTS) ══════════════ -->
+    <div class="screen" id="screen-home">
+      <div class="app-header">
+        <h2>Announcements</h2>
+        <span style="font-size: 13px; color: var(--muted); font-weight: 500;">4 items</span>
+      </div>
+
+      <div class="feed-scroll">
+        <div class="feed-label">4 announcements</div>
+
+        <!-- Urgent -->
+        <div class="announcement-card" onclick="showScreen('detail')">
+          <div class="card-header">
+            <div class="priority-badge" style="background: rgba(239,68,68,0.1);">
+              <div class="badge-dot" style="background: var(--urgent);"></div>
+              <span style="color: var(--urgent);">URGENT</span>
+            </div>
+            <span class="card-date">24 Jul 2026</span>
+          </div>
+          <div class="card-title">Water Supply Disruption — 25 July 2026</div>
+          <div class="card-preview">SYABAS will be conducting maintenance work affecting the Taman Aman Serenia area. Water supply will be disrupted from 8:00 AM to 6:00 PM.</div>
+          <div class="read-more">Read more →</div>
+        </div>
+
+        <!-- High -->
+        <div class="announcement-card" onclick="showScreen('detail')">
+          <div class="card-header">
+            <div class="priority-badge" style="background: rgba(249,115,22,0.1);">
+              <div class="badge-dot" style="background: var(--high);"></div>
+              <span style="color: var(--high);">HIGH</span>
+            </div>
+            <span class="card-date">22 Jul 2026</span>
+          </div>
+          <div class="card-title">AGM 2026 — Save the Date</div>
+          <div class="card-preview">The Annual General Meeting will be held on 15 August 2026 at the community hall. All residents are strongly encouraged to attend.</div>
+          <div class="read-more">Read more →</div>
+        </div>
+
+        <!-- Normal -->
+        <div class="announcement-card" onclick="showScreen('detail')">
+          <div class="card-header">
+            <div class="priority-badge" style="background: rgba(59,130,246,0.1);">
+              <div class="badge-dot" style="background: var(--normal);"></div>
+              <span style="color: var(--normal);">NORMAL</span>
+            </div>
+            <span class="card-date">20 Jul 2026</span>
+          </div>
+          <div class="card-title">Gotong-Royong: July Edition</div>
+          <div class="card-preview">Join us for our monthly community cleaning event on Saturday, 27 July at 7:30 AM. Refreshments provided!</div>
+          <div class="read-more">Read more →</div>
+        </div>
+
+        <!-- Low -->
+        <div class="announcement-card" onclick="showScreen('detail')">
+          <div class="card-header">
+            <div class="priority-badge" style="background: rgba(107,114,128,0.1);">
+              <div class="badge-dot" style="background: var(--low);"></div>
+              <span style="color: var(--low);">LOW</span>
+            </div>
+            <span class="card-date">18 Jul 2026</span>
+          </div>
+          <div class="card-title">RoS Registration Update</div>
+          <div class="card-preview">Residents are reminded to complete their information via the app. This data will be used for official RoS registration submission.</div>
+          <div class="read-more">Read more →</div>
+        </div>
+      </div>
+
+      <div class="tab-bar">
+        <div class="tab-item active">
+          <div class="tab-icon">🏠</div>
+          <span>Home</span>
+        </div>
+        <div class="tab-item" onclick="showScreen('profile')">
+          <div class="tab-icon">👤</div>
+          <span>Profile</span>
+        </div>
+        <div class="tab-item" onclick="showScreen('settings')">
+          <div class="tab-icon">⚙️</div>
+          <span>Settings</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ ANNOUNCEMENT DETAIL ══════════════ -->
+    <div class="screen" id="screen-detail">
+      <div class="app-header" style="position:relative;">
+        <div style="font-size: 13px; color: var(--primary); font-weight: 600; cursor:pointer;" onclick="showScreen('home')">‹ Back</div>
+        <h2>Announcement</h2>
+        <div style="width: 40px;"></div>
+      </div>
+      <div class="detail-screen">
+        <div class="detail-meta">
+          <div class="priority-badge" style="background: rgba(239,68,68,0.1);">
+            <div class="badge-dot" style="background: var(--urgent);"></div>
+            <span style="color: var(--urgent); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;">URGENT</span>
+          </div>
+          <span class="card-date">Friday, 24 July 2026</span>
+        </div>
+
+        <div class="detail-title">Water Supply Disruption — 25 July 2026</div>
+        <div class="detail-divider"></div>
+        <div class="detail-content">
+          SYABAS will be conducting essential maintenance work on the main pipeline serving the Taman Aman Serenia area.<br><br>
+          <strong>Date:</strong> Saturday, 25 July 2026<br>
+          <strong>Time:</strong> 8:00 AM – 6:00 PM<br>
+          <strong>Affected Area:</strong> All units in Taman Aman Serenia<br><br>
+          Residents are advised to:<br>
+          • Store sufficient water before 8:00 AM on the day of disruption<br>
+          • Avoid scheduling water-intensive activities during this period<br>
+          • Contact SYABAS at 1-800-88-5252 for urgent concerns<br><br>
+          Water supply will be restored progressively after 6:00 PM. We apologize for any inconvenience caused.
+        </div>
+        <div class="detail-footer">Last updated: Friday, 24 July 2026</div>
+      </div>
+    </div>
+
+    <!-- ══════════════ PROFILE ══════════════ -->
+    <div class="screen" id="screen-profile">
+      <div class="profile-banner">
+        <div class="avatar">A</div>
+        <div class="profile-name">Ahmad bin Abdullah</div>
+        <div class="profile-email">ahmad@example.com</div>
+        <div class="badge-row">
+          <span class="status-badge" style="background: rgba(29,78,216,0.1); color: var(--primary);">🏘️ Resident</span>
+          <span class="status-badge" style="background: rgba(16,185,129,0.1); color: var(--success);">✅ Active</span>
+        </div>
+      </div>
+
+      <div class="profile-action-row">
+        <button class="btn btn-secondary" style="width: auto; padding: 9px 18px; font-size: 13px;" onclick="toggleEdit()">✏️  Edit Profile</button>
+      </div>
+
+      <div class="profile-tab-row">
+        <div class="profile-tab active" id="tab-personal" onclick="switchTab('personal')">👤 Personal</div>
+        <div class="profile-tab" id="tab-address" onclick="switchTab('address')">🏠 Address</div>
+        <div class="profile-tab" id="tab-employ" onclick="switchTab('employ')">💼 Employment</div>
+      </div>
+
+      <div class="tab-content">
+        <div id="content-personal">
+          <div class="profile-section">
+            <div class="profile-field"><span class="field-label">Full Name</span><span class="field-value">Ahmad bin Abdullah</span></div>
+            <div class="profile-field"><span class="field-label">Phone</span><span class="field-value">+60 12-345 6789</span></div>
+            <div class="profile-field"><span class="field-label">IC Number</span><span class="field-value">901215-10-1234</span></div>
+            <div class="profile-field"><span class="field-label">Date of Birth</span><span class="field-value">1990-12-15</span></div>
+            <div class="profile-field"><span class="field-label">Place of Birth</span><span class="field-value">Kuala Lumpur</span></div>
+            <div class="profile-field"><span class="field-label">Sex</span><span class="field-value">Male (M)</span></div>
+            <div class="profile-field"><span class="field-label">Race</span><span class="field-value">Malay</span></div>
+            <div class="profile-field"><span class="field-label">Marital Status</span><span class="field-value">Married</span></div>
+            <div class="profile-field"><span class="field-label">Dependents</span><span class="field-value">2</span></div>
+            <div class="profile-field"><span class="field-label">Resident Type</span><span class="field-value">Owner</span></div>
+          </div>
+        </div>
+
+        <div id="content-address" style="display:none;">
+          <div class="profile-section">
+            <div class="profile-field"><span class="field-label">Taman Name</span><span class="field-value">Taman Aman Serenia</span></div>
+            <div class="profile-field"><span class="field-label">House Number</span><span class="field-value">No. 12</span></div>
+            <div class="profile-field"><span class="field-label">Street (Jalan)</span><span class="field-value">Jalan Aman 3/2</span></div>
+          </div>
+        </div>
+
+        <div id="content-employ" style="display:none;">
+          <div class="profile-section">
+            <div class="profile-field"><span class="field-label">Job Title</span><span class="field-value">Software Engineer</span></div>
+            <div class="profile-field"><span class="field-label">Employer</span><span class="field-value">Tech Corp Sdn Bhd</span></div>
+            <div class="profile-field"><span class="field-label">Employer Address</span><span class="field-value">KL Sentral, 50470 KL</span></div>
+            <div class="profile-field"><span class="field-label">Employer Phone</span><span class="field-value">+60 3-2222 3333</span></div>
+          </div>
+        </div>
+
+        <div style="height: 16px; flex-shrink: 0;"></div>
+      </div>
+
+      <div class="tab-bar">
+        <div class="tab-item" onclick="showScreen('home')">
+          <div class="tab-icon">🏠</div>
+          <span>Home</span>
+        </div>
+        <div class="tab-item active">
+          <div class="tab-icon">👤</div>
+          <span>Profile</span>
+        </div>
+        <div class="tab-item" onclick="showScreen('settings')">
+          <div class="tab-icon">⚙️</div>
+          <span>Settings</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ SETTINGS ══════════════ -->
+    <div class="screen" id="screen-settings">
+      <div class="app-header">
+        <h2>Settings</h2>
+      </div>
+
+      <div class="tab-content" style="padding-bottom: 16px;">
+        <div class="settings-section-label">ACCOUNT</div>
+        <div class="settings-card">
+          <div class="settings-row">
+            <span class="settings-emoji">📧</span>
+            <div class="settings-content">
+              <div class="settings-label">Email</div>
+              <div class="settings-value">ahmad@example.com</div>
+            </div>
+          </div>
+          <div class="settings-row">
+            <span class="settings-emoji">🔒</span>
+            <div class="settings-content">
+              <div class="settings-label">Account Status</div>
+              <div class="settings-value">Active</div>
+            </div>
+          </div>
+          <div class="settings-row">
+            <span class="settings-emoji">✅</span>
+            <div class="settings-content">
+              <div class="settings-label">Verification</div>
+              <div class="settings-value">Verified</div>
+            </div>
+          </div>
+          <div class="settings-row">
+            <span class="settings-emoji">🧑‍💼</span>
+            <div class="settings-content">
+              <div class="settings-label">Role</div>
+              <div class="settings-value">Resident</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-section-label">APP</div>
+        <div class="settings-card">
+          <div class="settings-row">
+            <span class="settings-emoji">📱</span>
+            <div class="settings-content">
+              <div class="settings-label">App Version</div>
+              <div class="settings-value">1.0.0</div>
+            </div>
+          </div>
+          <div class="settings-row">
+            <span class="settings-emoji">🌐</span>
+            <div class="settings-content">
+              <div class="settings-label">API Environment</div>
+              <div class="settings-value">RA Community API</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-section-label">SESSION</div>
+        <div class="settings-card" style="padding: 12px;">
+          <button class="btn btn-danger" onclick="showScreen('login')" style="border-radius: 10px;">🚪  Sign Out</button>
+        </div>
+
+        <div style="text-align: center; font-size: 11px; color: var(--muted); margin-top: 20px; line-height: 1.6; padding: 0 20px;">
+          RA Community Management<br>
+          For residents of Taman Aman Serenia
+        </div>
+      </div>
+
+      <div class="tab-bar">
+        <div class="tab-item" onclick="showScreen('home')">
+          <div class="tab-icon">🏠</div>
+          <span>Home</span>
+        </div>
+        <div class="tab-item" onclick="showScreen('profile')">
+          <div class="tab-icon">👤</div>
+          <span>Profile</span>
+        </div>
+        <div class="tab-item active">
+          <div class="tab-icon">⚙️</div>
+          <span>Settings</span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- phone-screen -->
+</div><!-- phone -->
+
+<script>
+  const screens = ['login','register','forgot','home','detail','profile','settings'];
+
+  function showScreen(name) {
+    screens.forEach(s => {
+      document.getElementById('screen-' + s).classList.remove('active');
+    });
+    document.getElementById('screen-' + name).classList.add('active');
+
+    document.querySelectorAll('.nav-btn').forEach((btn, i) => {
+      btn.classList.toggle('active', btn.textContent.trim().toLowerCase().startsWith(screenLabel(name)));
+    });
+
+    // Status bar bg
+    const authScreens = ['login','register','forgot'];
+    const sb = document.getElementById('statusBar');
+    sb.style.background = authScreens.includes(name) ? 'var(--bg)' : 'var(--white)';
+
+    // Reset forgot password state
+    if (name === 'forgot') {
+      document.getElementById('forgot-form-card').style.display = '';
+      document.getElementById('forgot-success-card').style.display = 'none';
+    }
+  }
+
+  function screenLabel(name) {
+    const map = {login:'login',register:'reg',forgot:'forgot',home:'home',detail:'ann',profile:'pro',settings:'set'};
+    return map[name] || name;
+  }
+
+  function showForgotSuccess() {
+    document.getElementById('forgot-form-card').style.display = 'none';
+    document.getElementById('forgot-success-card').style.display = '';
+  }
+
+  function switchTab(tab) {
+    ['personal','address','employ'].forEach(t => {
+      document.getElementById('tab-' + t).classList.toggle('active', t === tab);
+      document.getElementById('content-' + t).style.display = t === tab ? '' : 'none';
+    });
+  }
+
+  let editMode = false;
+  function toggleEdit() {
+    editMode = !editMode;
+    const btn = document.querySelector('.profile-action-row button');
+    btn.textContent = editMode ? '💾  Save Changes' : '✏️  Edit Profile';
+    btn.style.background = editMode ? 'var(--primary)' : 'transparent';
+    btn.style.color = editMode ? 'white' : 'var(--primary)';
+  }
+</script>
+</body>
+</html>

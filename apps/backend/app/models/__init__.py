@@ -9,6 +9,7 @@ from app.models.user import (
     AuditLog
 )
 from app.models.announcement import Announcement
+from app.models.community_settings import CommunitySettings
 
 __all__ = [
     "User",
@@ -17,4 +18,5 @@ __all__ = [
     "OAuthCredential",
     "AuditLog",
     "Announcement",
+    "CommunitySettings",
 ]

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback, type ChangeEvent } from 'reac
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuthStore } from '@hooks/useAuth'
+import { useCommunityStore } from '@hooks/useCommunitySettings'
 import apiClient from '@lib/api'
 import type { UserResponse, ResidentType } from '../../types/index'
 import { formatIC, stripIC, formatPhone, stripPhone } from '@utils/index'
@@ -81,6 +82,8 @@ export default function AdminPage() {
   const [editingUser, setEditingUser] = useState<AdminUser | null>(null)
   const [editForm, setEditForm] = useState<Partial<AdminUser>>({})
   const [saving, setSaving] = useState(false)
+  const [editError, setEditError] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
   // Delete confirm
   const [deletingId, setDeletingId] = useState<string | null>(null)
@@ -114,10 +117,15 @@ export default function AdminPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, search, roleFilter, activeFilter])
 
+  const communityName = useCommunityStore((s) => s.communityName)
+  const logoUrl = useCommunityStore((s) => s.logoUrl)
+  const fetchCommunitySettings = useCommunityStore((s) => s.fetchCommunitySettings)
+
   useEffect(() => {
     if (!mounted || !user) return
+    fetchCommunitySettings()
     fetchUsers()
-  }, [mounted, user, fetchUsers])
+  }, [mounted, user, fetchUsers, fetchCommunitySettings])
 
   // Debounce search
   useEffect(() => {
@@ -130,25 +138,57 @@ export default function AdminPage() {
   async function handleToggleActive(u: AdminUser) {
     try {
       await apiClient.patch(`/admin/users/${u.id}`, { is_active: !u.is_active })
+      setSuccessMessage(`Updated status for "${u.full_name}"`)
       fetchUsers()
+      setTimeout(() => setSuccessMessage(null), 3000)
     } catch { /* ignore */ }
   }
 
   function startEdit(u: AdminUser) {
     setEditingUser(u)
-    setEditForm({ ...u, ic_number: formatIC(u.ic_number) })
+    setEditError(null)
+    setEditForm({
+      full_name: u.full_name,
+      email: u.email,
+      phone_number: u.phone_number,
+      ic_number: formatIC(u.ic_number),
+      passport_number: u.passport_number,
+      role: u.role,
+      is_active: u.is_active,
+      resident_type: u.resident_type,
+      committee_title: u.committee_title,
+    })
   }
 
   async function saveEdit() {
     if (!editingUser) return
     setSaving(true)
+    setEditError(null)
     try {
-      const payload = { ...editForm, ic_number: stripIC(editForm.ic_number) }
+      const payload = {
+        full_name: editForm.full_name,
+        email: editForm.email,
+        phone_number: editForm.phone_number,
+        ic_number: stripIC(editForm.ic_number),
+        passport_number: editForm.passport_number,
+        role: editForm.role,
+        is_active: editForm.is_active,
+        resident_type: editForm.resident_type || null,
+        committee_title: editForm.committee_title || null,
+      }
       await apiClient.patch(`/admin/users/${editingUser.id}`, payload)
+      const name = editForm.full_name || editingUser.full_name
       setEditingUser(null)
+      setSuccessMessage(`✓ Changes saved for "${name}" successfully.`)
       fetchUsers()
-    } catch { /* ignore */ }
-    setSaving(false)
+      setTimeout(() => setSuccessMessage(null), 4000)
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
+        ?? 'Failed to save changes'
+      setEditError(typeof msg === 'string' ? msg : JSON.stringify(msg))
+    } finally {
+      setSaving(false)
+    }
   }
 
   async function handleDelete() {
@@ -266,6 +306,12 @@ export default function AdminPage() {
             <h3 style={{ fontWeight: 800, fontSize: '1.25rem', marginBottom: '1.5rem', borderBottom: '1px solid var(--color-border)', paddingBottom: '0.75rem' }}>
               Edit User: {editingUser.full_name}
             </h3>
+
+            {editError && (
+              <div className="alert alert-error animate-fade-in" style={{ marginBottom: '1.25rem' }}>
+                ⚠ {editError}
+              </div>
+            )}
             
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
@@ -347,22 +393,18 @@ export default function AdminPage() {
       )}
 
       {/* ── Nav ── */}
-      <nav style={{
-        position: 'sticky', top: 0, zIndex: 50,
-        backdropFilter: 'blur(12px)',
-        backgroundColor: 'rgba(255,255,255,0.9)',
-        borderBottom: '1px solid var(--color-border)',
-        padding: '0 2rem',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        height: '4rem',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+      <nav className="app-nav">
+        <div className="nav-brand">
           <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none', color: 'var(--color-text)' }}>
-            <span style={{ fontSize: '1.25rem' }}>🏡</span>
-            <span style={{ fontWeight: 700, fontSize: '1rem' }}>RA Community</span>
+            {logoUrl ? (
+              <img src={logoUrl} alt={communityName} style={{ width: '1.5rem', height: '1.5rem', borderRadius: '4px', objectFit: 'cover' }} />
+            ) : (
+              <span style={{ fontSize: '1.25rem' }}>🏡</span>
+            )}
+            <span style={{ fontWeight: 700, fontSize: '1rem' }}>{communityName}</span>
           </Link>
-          <span style={{ color: 'var(--color-border)' }}>│</span>
-          <span style={{ fontWeight: 700, fontSize: '0.9375rem', color: 'var(--color-primary)' }}>Admin Panel</span>
+          <span className="nav-divider">│</span>
+          <span className="nav-subtitle">Admin Panel</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <Link href="/dashboard" style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', fontWeight: 600, textDecoration: 'none' }}>
@@ -380,44 +422,66 @@ export default function AdminPage() {
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: '0.75rem', fontWeight: 700,
             }}>{initials}</div>
-            <span style={{ fontSize: '0.875rem', fontWeight: 600 }}>Admin</span>
+            <span className="nav-user-label" style={{ fontSize: '0.875rem', fontWeight: 600 }}>Admin</span>
           </div>
         </div>
       </nav>
 
-      <main style={{ maxWidth: '1920px', margin: '0 auto', padding: '2.5rem 1.5rem' }}>
+      {/* Admin Tab Navigation */}
+      <div style={{ background: '#fff', borderBottom: '1px solid var(--color-border)', padding: '0 1rem' }}>
+        <div style={{ maxWidth: '1920px', margin: '0 auto', display: 'flex', gap: '1rem', overflowX: 'auto' }}>
+          <Link href="/admin" style={{ padding: '0.875rem 0.75rem', color: 'var(--color-primary)', fontWeight: 700, fontSize: '0.875rem', textDecoration: 'none', borderBottom: '2px solid var(--color-primary)' }}>
+            👥 User Management
+          </Link>
+          <Link href="/admin/announcements" style={{ padding: '0.875rem 0.75rem', color: 'var(--color-text-muted)', fontWeight: 600, fontSize: '0.875rem', textDecoration: 'none', borderBottom: '2px solid transparent' }}>
+            📢 Announcements
+          </Link>
+          <Link href="/admin/settings" style={{ padding: '0.875rem 0.75rem', color: 'var(--color-text-muted)', fontWeight: 600, fontSize: '0.875rem', textDecoration: 'none', borderBottom: '2px solid transparent' }}>
+            ⚙️ Community & SSL Settings
+          </Link>
+        </div>
+      </div>
+
+      <main className="main-content">
 
         {/* Header row */}
-        <div className="animate-fade-up" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
+        <div className="action-bar animate-fade-up">
           <div>
             <h1 style={{ fontSize: '1.625rem', fontWeight: 800, marginBottom: '0.25rem' }}>User Management</h1>
             <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9375rem' }}>
               {data ? `${data.total} total residents` : 'Loading…'}
             </p>
           </div>
-          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-            <Link href="/admin/announcements" className="btn-ghost" style={{ padding: '0.625rem 1rem', fontSize: '0.875rem', textDecoration: 'none' }}>
-              📢 Manage Announcements
+          <div className="action-buttons">
+            <Link href="/admin/announcements" className="btn-ghost" style={{ textDecoration: 'none' }}>
+              📢 Announcements
             </Link>
-            <button onClick={downloadTemplate} className="btn-ghost" style={{ padding: '0.625rem 1rem', fontSize: '0.875rem' }}>
-              ⬇ Download Template
+            <button onClick={downloadTemplate} className="btn-ghost">
+              ⬇ Template
             </button>
-            <button onClick={handleExport} disabled={exporting} className="btn-ghost" style={{ padding: '0.625rem 1rem', fontSize: '0.875rem' }}>
-              {exporting ? '⏳ Exporting...' : '📥 Export Excel'}
+            <button onClick={handleExport} disabled={exporting} className="btn-ghost">
+              {exporting ? '⏳ Exporting...' : '📥 Export'}
             </button>
             <label style={{
               display: 'inline-flex', alignItems: 'center', gap: '0.375rem',
-              padding: '0.625rem 1.125rem', borderRadius: 'var(--radius)',
+              borderRadius: 'var(--radius)',
               background: importing ? 'var(--color-surface)' : 'var(--color-primary)',
               color: importing ? 'var(--color-text-muted)' : '#fff',
-              fontWeight: 600, fontSize: '0.875rem', cursor: importing ? 'not-allowed' : 'pointer',
+              fontWeight: 600, cursor: importing ? 'not-allowed' : 'pointer',
               border: '1.5px solid transparent',
             }}>
-              {importing ? <><span className="spinner" /> Importing…</> : '📤 Import Excel'}
+              {importing ? <><span className="spinner" /> Importing…</> : '📤 Import'}
               <input ref={fileInputRef} type="file" accept=".xlsx,.xls,.csv" onChange={handleImport} style={{ display: 'none' }} disabled={importing} />
             </label>
           </div>
         </div>
+
+        {/* Success alert banner */}
+        {successMessage && (
+          <div className="alert alert-success animate-fade-in" style={{ marginBottom: '1.25rem' }}>
+            {successMessage}
+          </div>
+        )}
 
         {/* Import result banner */}
         {importResult && (
@@ -440,28 +504,28 @@ export default function AdminPage() {
         )}
 
         {/* Filters */}
-        <div className="card animate-fade-up" style={{ padding: '1rem 1.25rem', marginBottom: '1.25rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
+        <div className="card filter-bar animate-fade-up">
           <input
+            className="filter-input"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder="🔍  Search name, email, IC, phone…"
-            style={{ flex: '1', minWidth: '220px', fontSize: '0.9rem' }}
           />
-          <select value={roleFilter} onChange={(e) => { setRoleFilter(e.target.value); setPage(1) }}
-            style={{ width: '140px', fontSize: '0.875rem' }}>
-            <option value="">All Roles</option>
-            <option value="admin">Admin</option>
-            <option value="resident">Resident</option>
-          </select>
-          <select value={activeFilter} onChange={(e) => { setActiveFilter(e.target.value); setPage(1) }}
-            style={{ width: '140px', fontSize: '0.875rem' }}>
-            <option value="">All Status</option>
-            <option value="true">Active</option>
-            <option value="false">Inactive</option>
-          </select>
+          <div style={{ display: 'flex', gap: '0.5rem', width: '100%' }}>
+            <select className="filter-select" value={roleFilter} onChange={(e) => { setRoleFilter(e.target.value); setPage(1) }}>
+              <option value="">All Roles</option>
+              <option value="admin">Admin</option>
+              <option value="resident">Resident</option>
+            </select>
+            <select className="filter-select" value={activeFilter} onChange={(e) => { setActiveFilter(e.target.value); setPage(1) }}>
+              <option value="">All Status</option>
+              <option value="true">Active</option>
+              <option value="false">Inactive</option>
+            </select>
+          </div>
           {(searchInput || roleFilter || activeFilter) && (
             <button onClick={() => { setSearchInput(''); setRoleFilter(''); setActiveFilter(''); setPage(1) }}
-              className="btn-ghost" style={{ padding: '0.5rem 0.875rem', fontSize: '0.8125rem' }}>
+              className="btn-ghost" style={{ padding: '0.5rem 0.875rem', fontSize: '0.8125rem', width: '100%' }}>
               ✕ Clear
             </button>
           )}

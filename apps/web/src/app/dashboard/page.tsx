@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { userApi } from '@lib/auth'
 import { useAuthStore } from '@hooks/useAuth'
-import type { UserResponse } from '@types/index'
+import { useCommunityStore } from '@hooks/useCommunitySettings'
+import type { UserResponse } from '../../types/index'
 import { formatIC, formatSex, formatRace, formatMaritalStatus, formatDate, formatPhone } from '@utils/index'
 import apiClient from '@lib/api'
 
@@ -15,6 +16,11 @@ export default function DashboardPage() {
   const logout = useAuthStore((s) => s.logout)
   const user = useAuthStore((s) => s.user)
   const setUser = useAuthStore((s) => s.setUser)
+
+  const communityName = useCommunityStore((s) => s.communityName)
+  const logoUrl = useCommunityStore((s) => s.logoUrl)
+  const fetchCommunitySettings = useCommunityStore((s) => s.fetchCommunitySettings)
+
   const [loading, setLoading] = useState(true)
   // `mounted` ensures this runs only on the client after React hydration,
   // by which point Zustand has already synchronously read localStorage.
@@ -31,6 +37,7 @@ export default function DashboardPage() {
       router.replace('/login')
       return
     }
+    fetchCommunitySettings()
     userApi.getMe()
       .then((me: UserResponse) => {
         setUser(me)
@@ -82,38 +89,34 @@ export default function DashboardPage() {
   return (
     <div style={{ minHeight: '100vh', background: 'var(--color-surface)' }}>
       {/* ── Top nav ── */}
-      <nav style={{
-        position: 'sticky', top: 0, zIndex: 50,
-        backdropFilter: 'blur(12px)',
-        backgroundColor: 'rgba(255,255,255,0.9)',
-        borderBottom: '1px solid var(--color-border)',
-        padding: '0 2rem',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        height: '4rem',
-      }}>
+      <nav className="app-nav">
         <Link href="/" style={{
           display: 'flex', alignItems: 'center', gap: '0.625rem',
           textDecoration: 'none', color: 'var(--color-text)',
         }}>
-          <span style={{ fontSize: '1.375rem' }}>🏡</span>
-          <span style={{ fontWeight: 700, fontSize: '1rem', letterSpacing: '-0.02em' }}>RA Community</span>
+          {logoUrl ? (
+            <img src={logoUrl} alt={communityName} style={{ width: '1.75rem', height: '1.75rem', borderRadius: '4px', objectFit: 'cover' }} />
+          ) : (
+            <span style={{ fontSize: '1.375rem' }}>🏡</span>
+          )}
+          <span style={{ fontWeight: 700, fontSize: '1rem', letterSpacing: '-0.02em' }}>{communityName}</span>
         </Link>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           {user?.role === 'admin' && (
             <Link href="/admin" style={{
               display: 'inline-flex', alignItems: 'center', gap: '0.375rem',
-              padding: '0.4375rem 0.875rem', borderRadius: 'var(--radius)',
+              padding: '0.4375rem 0.75rem', borderRadius: 'var(--radius)',
               fontSize: '0.8125rem', fontWeight: 600,
               color: '#7c3aed', background: 'rgba(124,58,237,0.08)',
               border: '1px solid rgba(124,58,237,0.2)', textDecoration: 'none',
             }}>
-              ⚙ Admin Panel
+              ⚙ Admin
             </Link>
           )}
           <div style={{
-            display: 'flex', alignItems: 'center', gap: '0.625rem',
+            display: 'flex', alignItems: 'center', gap: '0.5rem',
             background: 'var(--color-surface)', borderRadius: 'var(--radius-full)',
-            padding: '0.375rem 0.875rem 0.375rem 0.375rem',
+            padding: '0.375rem 0.75rem 0.375rem 0.375rem',
             border: '1px solid var(--color-border)',
           }}>
             <div style={{
@@ -122,19 +125,18 @@ export default function DashboardPage() {
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: '0.75rem', fontWeight: 700,
             }}>{initials}</div>
-            <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-text)' }}>
-              {user?.full_name?.split(' ')[0] ?? 'Resident'}
+            <span className="nav-user-label" style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-text)' }}>
+              {user?.full_name?.split(' ')[0]}
             </span>
           </div>
-          <button onClick={handleLogout} className="btn-ghost"
-            style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}>
-            Sign out
+          <button onClick={handleLogout} className="btn-ghost" style={{ padding: '0.375rem 0.625rem', fontSize: '0.8125rem' }} title="Sign Out">
+            🚪
           </button>
         </div>
       </nav>
 
       {/* ── Main content ── */}
-      <main style={{ maxWidth: '860px', margin: '0 auto', padding: '2.5rem 1.5rem' }}>
+      <main className="main-content" style={{ maxWidth: '860px' }}>
         {/* Profile hero card */}
         <div className="card animate-fade-up" style={{
           padding: '2rem', marginBottom: '1.5rem',

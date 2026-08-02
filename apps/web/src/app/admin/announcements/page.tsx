@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuthStore } from '@hooks/useAuth'
+import { useCommunityStore } from '@hooks/useCommunitySettings'
 import apiClient from '@lib/api'
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -90,10 +91,15 @@ export default function AdminAnnouncementsPage() {
     }
   }, [page, router])
 
+  const communityName = useCommunityStore((s) => s.communityName)
+  const logoUrl = useCommunityStore((s) => s.logoUrl)
+  const fetchCommunitySettings = useCommunityStore((s) => s.fetchCommunitySettings)
+
   useEffect(() => {
     if (!mounted || !user) return
+    fetchCommunitySettings()
     fetchAnnouncements()
-  }, [mounted, user, fetchAnnouncements])
+  }, [mounted, user, fetchAnnouncements, fetchCommunitySettings])
 
   // ── Actions ──────────────────────────────────────────────────────────────
 
@@ -228,17 +234,18 @@ export default function AdminAnnouncementsPage() {
       )}
 
       {/* ── Nav ── */}
-      <nav style={{
-        position: 'sticky', top: 0, zIndex: 50, backdropFilter: 'blur(12px)',
-        backgroundColor: 'rgba(255,255,255,0.9)', borderBottom: '1px solid var(--color-border)',
-        padding: '0 2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '4rem',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-          <Link href="/admin" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none', color: 'var(--color-text-muted)' }}>
-            <span style={{ fontWeight: 600, fontSize: '0.9375rem' }}>← Admin Panel</span>
+      <nav className="app-nav">
+        <div className="nav-brand">
+          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none', color: 'var(--color-text)' }}>
+            {logoUrl ? (
+              <img src={logoUrl} alt={communityName} style={{ width: '1.5rem', height: '1.5rem', borderRadius: '4px', objectFit: 'cover' }} />
+            ) : (
+              <span style={{ fontSize: '1.25rem' }}>🏡</span>
+            )}
+            <span style={{ fontWeight: 700, fontSize: '1rem' }}>{communityName}</span>
           </Link>
-          <span style={{ color: 'var(--color-border)' }}>│</span>
-          <span style={{ fontWeight: 700, fontSize: '0.9375rem', color: 'var(--color-primary)' }}>Announcements</span>
+          <span className="nav-divider">│</span>
+          <span className="nav-subtitle">Announcements</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <div style={{
@@ -247,12 +254,27 @@ export default function AdminAnnouncementsPage() {
             padding: '0.375rem 0.875rem 0.375rem 0.375rem', border: '1px solid var(--color-border)',
           }}>
             <div style={{ width: '2rem', height: '2rem', borderRadius: '50%', background: 'var(--gradient-hero)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 700 }}>{initials}</div>
-            <span style={{ fontSize: '0.875rem', fontWeight: 600 }}>Admin</span>
+            <span className="nav-user-label" style={{ fontSize: '0.875rem', fontWeight: 600 }}>Admin</span>
           </div>
         </div>
       </nav>
 
-      <main style={{ maxWidth: '1000px', margin: '0 auto', padding: '2.5rem 1.5rem' }}>
+      {/* Admin Tab Navigation */}
+      <div style={{ background: '#fff', borderBottom: '1px solid var(--color-border)', padding: '0 1rem' }}>
+        <div style={{ maxWidth: '1000px', margin: '0 auto', display: 'flex', gap: '1rem', overflowX: 'auto' }}>
+          <Link href="/admin" style={{ padding: '0.875rem 0.75rem', color: 'var(--color-text-muted)', fontWeight: 600, fontSize: '0.875rem', textDecoration: 'none', borderBottom: '2px solid transparent' }}>
+            👥 User Management
+          </Link>
+          <Link href="/admin/announcements" style={{ padding: '0.875rem 0.75rem', color: 'var(--color-primary)', fontWeight: 700, fontSize: '0.875rem', textDecoration: 'none', borderBottom: '2px solid var(--color-primary)' }}>
+            📢 Announcements
+          </Link>
+          <Link href="/admin/settings" style={{ padding: '0.875rem 0.75rem', color: 'var(--color-text-muted)', fontWeight: 600, fontSize: '0.875rem', textDecoration: 'none', borderBottom: '2px solid transparent' }}>
+            ⚙️ Community & SSL Settings
+          </Link>
+        </div>
+      </div>
+
+      <main className="main-content" style={{ maxWidth: '1000px' }}>
         <div className="animate-fade-up" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem' }}>
           <div>
             <h1 style={{ fontSize: '1.625rem', fontWeight: 800, marginBottom: '0.25rem' }}>Announcements</h1>
