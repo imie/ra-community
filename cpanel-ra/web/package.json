@@ -1,0 +1,39 @@
+{
+  "name": "@ra-community/web",
+  "version": "1.0.0",
+  "description": "Next.js web application for RA Community Management",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
+  },
+  "dependencies": {
+    "next": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "@hookform/resolvers": "latest",
+    "react-hook-form": "latest",
+    "zod": "latest",
+    "axios": "latest",
+    "zustand": "latest",
+    "clsx": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "typescript": "latest",
+    "autoprefixer": "latest",
+    "postcss": "latest",
+    "jest": "latest",
+    "@testing-library/react": "latest",
+    "@testing-library/jest-dom": "latest",
+    "eslint": "latest",
+    "eslint-config-next": "latest"
+  }
+}
