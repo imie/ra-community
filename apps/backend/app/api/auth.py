@@ -1,11 +1,17 @@
 """
 Authentication routes for the RA Community API.
+
+Security hardening:
+  - CVE-4: Per-IP rate limiting on login / register / forgot-password.
+  - CVE-5: get_current_user uses verify_access_token to block refresh-token misuse.
 """
 from datetime import timedelta
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db
@@ -27,16 +33,21 @@ from app.services.auth_service import (
     reset_password_with_token,
     unlock_user_if_needed,
 )
-from app.utils.jwt import create_access_token, create_refresh_token, verify_token
+from app.utils.jwt import create_access_token, create_refresh_token, verify_token, verify_access_token
 from app.utils.password import verify_password
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
+# Rate limiter — keyed by client IP address (CVE-4)
+limiter = Limiter(key_func=get_remote_address)
+
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 
+
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-    token_data = verify_token(token)
+    # CVE-5: use verify_access_token — explicitly rejects refresh tokens
+    token_data = verify_access_token(token)
     if token_data is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid authentication credentials")
 
@@ -51,7 +62,8 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
 
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-def register(user_request: UserRegisterRequest, db: Session = Depends(get_db)) -> Any:
+@limiter.limit("10/minute")  # CVE-4: rate limit registration
+def register(request: Request, user_request: UserRegisterRequest, db: Session = Depends(get_db)) -> Any:
     existing = get_user_by_email(db, user_request.email)
     if existing:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
@@ -66,7 +78,8 @@ def register(user_request: UserRegisterRequest, db: Session = Depends(get_db)) -
 
 
 @router.post("/login", response_model=TokenResponse)
-def login(login_request: LoginRequest, db: Session = Depends(get_db)) -> Any:
+@limiter.limit("5/minute")  # CVE-4: strict rate limit on login to block brute force
+def login(request: Request, login_request: LoginRequest, db: Session = Depends(get_db)) -> Any:
     user = get_user_by_email(db, login_request.email)
     if user is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
@@ -125,8 +138,9 @@ def refresh_token_route(request: RefreshTokenRequest, db: Session = Depends(get_
 
 
 @router.post("/forgot-password")
-def forgot_password(request: ForgotPasswordRequest, db: Session = Depends(get_db)) -> Any:
-    user = get_user_by_email(db, request.email)
+@limiter.limit("3/minute")  # CVE-4: strict limit to prevent email DoS and enumeration
+def forgot_password(request: Request, req: ForgotPasswordRequest, db: Session = Depends(get_db)) -> Any:
+    user = get_user_by_email(db, req.email)
     if user is None:
         # Always return the same response to prevent user enumeration
         return {"message": "If this email is registered, a password reset link has been sent."}

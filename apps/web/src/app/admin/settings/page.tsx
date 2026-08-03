@@ -11,12 +11,14 @@ interface CommunitySettings {
   id: string
   community_name: string
   logo_url?: string | null
-  ssl_mode: 'disabled' | 'custom' | 'letsencrypt'
+  ssl_mode: 'disabled' | 'custom' | 'cloudflare' | 'letsencrypt'
+  ssl_provider?: string | null
   domain_name?: string | null
   admin_email?: string | null
   enforce_https: boolean
   ssl_status: 'disabled' | 'active' | 'pending' | 'error'
   ssl_error_message?: string | null
+  cert_expires_at?: string | null
   auto_renew: boolean
   last_renewed_at?: string | null
 }
@@ -35,7 +37,7 @@ export default function CommunitySettingsPage() {
   // Settings State
   const [communityName, setCommunityName] = useState('RA Community — Taman Aman Serenia')
   const [logoUrl, setLogoUrl] = useState<string | null>(null)
-  const [sslMode, setSslMode] = useState<'disabled' | 'custom' | 'letsencrypt'>('disabled')
+  const [sslMode, setSslMode] = useState<'disabled' | 'custom' | 'cloudflare' | 'letsencrypt'>('disabled')
   const [domainName, setDomainName] = useState('')
   const [adminEmail, setAdminEmail] = useState('')
   const [enforceHttps, setEnforceHttps] = useState(false)
@@ -45,8 +47,11 @@ export default function CommunitySettingsPage() {
 
   // Custom SSL Modal State
   const [showCustomSslModal, setShowCustomSslModal] = useState(false)
+  const [showCloudflareModal, setShowCloudflareModal] = useState(false)
   const [fullchainPem, setFullchainPem] = useState('')
   const [privkeyPem, setPrivkeyPem] = useState('')
+  const [sslProvider, setSslProvider] = useState<string | null>(null)
+  const [certExpiresAt, setCertExpiresAt] = useState<string | null>(null)
 
   // Let's Encrypt Modal State
   const [showLetsEncryptModal, setShowLetsEncryptModal] = useState(false)
@@ -71,6 +76,8 @@ export default function CommunitySettingsPage() {
       setEnforceHttps(data.enforce_https)
       setAutoRenew(data.auto_renew)
       setSslStatus(data.ssl_status)
+      setSslProvider(data.ssl_provider ?? null)
+      setCertExpiresAt(data.cert_expires_at ?? null)
       setLastRenewedAt(data.last_renewed_at ?? null)
     } catch {
       /* ignore */
@@ -134,18 +141,47 @@ export default function CommunitySettingsPage() {
     setSaving(true)
     setErrorMessage(null)
     try {
-      await apiClient.post('/community/settings/ssl/custom', {
+      const { data } = await apiClient.post('/community/settings/ssl/custom', {
         fullchain_pem: fullchainPem,
         privkey_pem: privkeyPem,
       })
       setShowCustomSslModal(false)
       setSslMode('custom')
       setSslStatus('active')
-      setSuccessMessage('✓ Custom SSL certificate uploaded and activated.')
+      setSslProvider('custom')
+      setCertExpiresAt(data.cert_expires_at ?? null)
+      setSuccessMessage(`✓ Custom SSL certificate uploaded. Nginx: ${data.nginx_status === 'nginx_reloaded' ? 'reloaded ✓' : 'reload pending ⚠'}`)
       fetchSettings()
-      setTimeout(() => setSuccessMessage(null), 4000)
+      setTimeout(() => setSuccessMessage(null), 6000)
     } catch (err: any) {
       setErrorMessage(err.response?.data?.detail ?? 'Failed to upload custom SSL certificate.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleSaveCloudflareSSL = async () => {
+    if (!fullchainPem.trim() || !privkeyPem.trim()) {
+      setErrorMessage('Please provide both the Cloudflare Origin Certificate and Private Key.')
+      return
+    }
+    setSaving(true)
+    setErrorMessage(null)
+    try {
+      const { data } = await apiClient.post('/community/settings/ssl/cloudflare', {
+        fullchain_pem: fullchainPem,
+        privkey_pem: privkeyPem,
+      })
+      setShowCloudflareModal(false)
+      setSslMode('cloudflare')
+      setSslStatus('active')
+      setSslProvider('cloudflare')
+      setCertExpiresAt(data.cert_expires_at ?? null)
+      setSuccessMessage(`✓ Cloudflare Origin Certificate activated. Nginx: ${data.nginx_status === 'nginx_reloaded' ? 'reloaded ✓' : 'reload pending ⚠'}`)
+      fetchSettings()
+      setTimeout(() => setSuccessMessage(null), 6000)
+    } catch (err: any) {
+      setErrorMessage(err.response?.data?.detail ?? 'Failed to upload Cloudflare SSL certificate.')
     } finally {
       setSaving(false)
     }
@@ -310,14 +346,25 @@ export default function CommunitySettingsPage() {
               </div>
 
               <div
-                onClick={() => { setSslMode('custom'); setShowCustomSslModal(true) }}
+                onClick={() => { setSslMode('cloudflare'); setShowCloudflareModal(true); setFullchainPem(''); setPrivkeyPem('') }}
+                style={{
+                  padding: '1rem', borderRadius: 'var(--radius)', border: `2px solid ${sslMode === 'cloudflare' ? '#f6821f' : 'var(--color-border)'}`,
+                  background: sslMode === 'cloudflare' ? '#fff7ed' : '#fff', cursor: 'pointer'
+                }}
+              >
+                <div style={{ fontWeight: 700, fontSize: '0.9375rem', marginBottom: '0.25rem' }}>☁️ Cloudflare Origin Cert</div>
+                <div style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)' }}>Upload Cloudflare Origin Certificate (Full strict mode)</div>
+              </div>
+
+              <div
+                onClick={() => { setSslMode('custom'); setShowCustomSslModal(true); setFullchainPem(''); setPrivkeyPem('') }}
                 style={{
                   padding: '1rem', borderRadius: 'var(--radius)', border: `2px solid ${sslMode === 'custom' ? 'var(--color-primary)' : 'var(--color-border)'}`,
                   background: sslMode === 'custom' ? 'var(--color-primary-light)' : '#fff', cursor: 'pointer'
                 }}
               >
                 <div style={{ fontWeight: 700, fontSize: '0.9375rem', marginBottom: '0.25rem' }}>🔑 Custom SSL Certificate</div>
-                <div style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)' }}>Upload custom .crt/.pem fullchain & private key</div>
+                <div style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)' }}>Upload any CA cert: DigiCert, Sectigo, ZeroSSL, etc.</div>
               </div>
 
               <div
@@ -328,7 +375,7 @@ export default function CommunitySettingsPage() {
                 }}
               >
                 <div style={{ fontWeight: 700, fontSize: '0.9375rem', marginBottom: '0.25rem' }}>🛡️ Let's Encrypt (Automated)</div>
-                <div style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)' }}>Auto-register & renew SSL certificates via ACME</div>
+                <div style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)' }}>Free 90-day cert, auto-renewed via ACME HTTP-01</div>
               </div>
             </div>
           </div>
@@ -352,6 +399,14 @@ export default function CommunitySettingsPage() {
             </label>
           </div>
 
+          {/* Cert expiry + provider info */}
+          {certExpiresAt && (
+            <div style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              🗓️ Certificate expires: <strong>{new Date(certExpiresAt).toLocaleDateString('en-MY', { year: 'numeric', month: 'long', day: 'numeric' })}</strong>
+              {sslProvider && <span style={{ marginLeft: '0.5rem', fontSize: '0.75rem', background: '#f1f5f9', padding: '0.15rem 0.5rem', borderRadius: '999px', fontWeight: 600 }}>via {sslProvider}</span>}
+            </div>
+          )}
+
           {lastRenewedAt && (
             <div style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)', marginBottom: '1rem' }}>
               🕒 Last Certificate Issue / Renewal: <strong>{new Date(lastRenewedAt).toLocaleString()}</strong>
@@ -359,7 +414,10 @@ export default function CommunitySettingsPage() {
           )}
 
           <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-            <button onClick={() => setShowCustomSslModal(true)} className="btn-ghost" style={{ fontSize: '0.875rem' }}>
+            <button onClick={() => { setShowCloudflareModal(true); setFullchainPem(''); setPrivkeyPem('') }} className="btn-ghost" style={{ fontSize: '0.875rem' }}>
+              ☁️ Upload Cloudflare Origin Cert
+            </button>
+            <button onClick={() => { setShowCustomSslModal(true); setFullchainPem(''); setPrivkeyPem('') }} className="btn-ghost" style={{ fontSize: '0.875rem' }}>
               📤 Upload Custom SSL (.crt/.key)
             </button>
             <button onClick={() => setShowLetsEncryptModal(true)} className="btn-ghost" style={{ fontSize: '0.875rem' }}>
@@ -373,9 +431,10 @@ export default function CommunitySettingsPage() {
       {showCustomSslModal && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', backdropFilter: 'blur(4px)' }}>
           <div className="card animate-fade-up" style={{ maxWidth: '650px', width: '100%', padding: '2rem', maxHeight: '90vh', overflowY: 'auto' }}>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '1rem' }}>Upload Custom SSL Certificate</h3>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.5rem' }}>🔑 Upload Custom SSL Certificate</h3>
             <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '1.25rem' }}>
-              Paste your PEM-formatted Fullchain Certificate (`fullchain.pem` or `.crt`) and Private Key (`privkey.pem` or `.key`).
+              Paste your PEM-formatted Fullchain Certificate and Private Key.
+              Works with any CA: DigiCert, Sectigo, ZeroSSL, etc.
             </p>
 
             <div style={{ marginBottom: '1rem' }}>
@@ -386,7 +445,7 @@ export default function CommunitySettingsPage() {
                 rows={5}
                 value={fullchainPem}
                 onChange={(e) => setFullchainPem(e.target.value)}
-                placeholder="-----BEGIN CERTIFICATE-----&#10;...&#10;-----END CERTIFICATE-----"
+                placeholder={'-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----'}
                 style={{ fontFamily: 'monospace', fontSize: '0.8125rem' }}
               />
             </div>
@@ -399,7 +458,7 @@ export default function CommunitySettingsPage() {
                 rows={5}
                 value={privkeyPem}
                 onChange={(e) => setPrivkeyPem(e.target.value)}
-                placeholder="-----BEGIN PRIVATE KEY-----&#10;...&#10;-----END PRIVATE KEY-----"
+                placeholder={'-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----'}
                 style={{ fontFamily: 'monospace', fontSize: '0.8125rem' }}
               />
             </div>
@@ -408,6 +467,64 @@ export default function CommunitySettingsPage() {
               <button onClick={() => setShowCustomSslModal(false)} className="btn-ghost">Cancel</button>
               <button onClick={handleSaveCustomSsl} disabled={saving} className="btn-primary">
                 {saving ? 'Uploading…' : 'Activate Custom SSL'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal 1b: Upload Cloudflare Origin Certificate ── */}
+      {showCloudflareModal && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', backdropFilter: 'blur(4px)' }}>
+          <div className="card animate-fade-up" style={{ maxWidth: '680px', width: '100%', padding: '2rem', maxHeight: '90vh', overflowY: 'auto' }}>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.5rem' }}>☁️ Cloudflare Origin Certificate</h3>
+
+            {/* Step-by-step Cloudflare instructions */}
+            <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 'var(--radius)', padding: '1rem', marginBottom: '1.25rem', fontSize: '0.8125rem' }}>
+              <div style={{ fontWeight: 700, marginBottom: '0.5rem', color: '#b45309' }}>📋 How to get your Cloudflare Origin Certificate:</div>
+              <ol style={{ paddingLeft: '1.25rem', lineHeight: 1.7, color: '#92400e' }}>
+                <li>Go to <strong>Cloudflare Dashboard</strong> → your domain → <strong>SSL/TLS → Origin Server</strong></li>
+                <li>Click <strong>"Create Certificate"</strong></li>
+                <li>Choose key type (RSA 2048 recommended) and validity period (up to 15 years)</li>
+                <li>Copy <strong>"Origin Certificate"</strong> → paste below as Fullchain PEM</li>
+                <li>Copy <strong>"Private Key"</strong> → paste below as Private Key PEM</li>
+                <li>Set Cloudflare SSL/TLS encryption mode to <strong>"Full (strict)"</strong></li>
+              </ol>
+              <div style={{ marginTop: '0.5rem', color: '#78350f', fontSize: '0.75rem' }}>
+                ⚠️ Cloudflare Origin Certs only work when traffic passes through Cloudflare's proxy (orange cloud ☁ enabled).
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', marginBottom: '0.375rem' }}>
+                Cloudflare Origin Certificate (fullchain.pem)
+              </label>
+              <textarea
+                rows={6}
+                value={fullchainPem}
+                onChange={(e) => setFullchainPem(e.target.value)}
+                placeholder={'-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----'}
+                style={{ fontFamily: 'monospace', fontSize: '0.8125rem' }}
+              />
+            </div>
+
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', marginBottom: '0.375rem' }}>
+                Cloudflare Private Key (privkey.pem)
+              </label>
+              <textarea
+                rows={6}
+                value={privkeyPem}
+                onChange={(e) => setPrivkeyPem(e.target.value)}
+                placeholder={'-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----'}
+                style={{ fontFamily: 'monospace', fontSize: '0.8125rem' }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+              <button onClick={() => setShowCloudflareModal(false)} className="btn-ghost">Cancel</button>
+              <button onClick={handleSaveCloudflareSSL} disabled={saving} className="btn-primary" style={{ background: '#f6821f', borderColor: '#f6821f' }}>
+                {saving ? 'Activating…' : '☁️ Activate Cloudflare SSL'}
               </button>
             </div>
           </div>

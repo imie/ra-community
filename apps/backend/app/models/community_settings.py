@@ -20,15 +20,22 @@ class CommunitySettings(Base):
     logo_url = Column(Text, nullable=True)
     
     # SSL & HTTPS Security
-    # ssl_mode: 'disabled' | 'custom' | 'letsencrypt'
+    # ssl_mode: 'disabled' | 'custom' | 'cloudflare' | 'letsencrypt'
     ssl_mode = Column(String(50), nullable=False, default="disabled")
     domain_name = Column(String(255), nullable=True)
     admin_email = Column(String(255), nullable=True)
     enforce_https = Column(Boolean, nullable=False, default=False)
     
-    # Custom Cert Paths / Content
+    # ssl_provider: which provider issued the cert currently written to /etc/nginx/ssl/
+    # Values: 'letsencrypt' | 'cloudflare' | 'custom' | None
+    ssl_provider = Column(String(50), nullable=True)
+
+    # Canonical cert paths on the host filesystem (always the unified Nginx-read paths)
     custom_cert_path = Column(Text, nullable=True)
     custom_key_path = Column(Text, nullable=True)
+
+    # Certificate expiry date — parsed from the PEM at upload time, displayed in admin UI
+    cert_expires_at = Column(DateTime(timezone=True), nullable=True)
     
     # Let's Encrypt / ACME status
     # ssl_status: 'disabled' | 'active' | 'pending' | 'error'

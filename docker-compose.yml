@@ -49,18 +49,26 @@ services:
       - DATABASE_URL=postgresql://ra_user:ra_password@postgres:5432/ra_db
       - REDIS_URL=redis://redis:6379/0
       - BACKEND_ENV=development
-      - BACKEND_DEBUG=True
-      - SECRET_KEY=dev-secret-key-change-in-production
+      - BACKEND_DEBUG=False
+      - BACKEND_SQL_ECHO=False
+      - SECRET_KEY=${SECRET_KEY:-CHANGE_THIS_IN_PRODUCTION}
       - ALLOWED_HOSTS=localhost,127.0.0.1,backend,web,localhost:3000
-      - JWT_SECRET=dev-jwt-secret-change-in-production
+      - JWT_SECRET=${JWT_SECRET:-CHANGE_THIS_IN_PRODUCTION}
       - JWT_ALGORITHM=HS256
       - JWT_EXPIRATION_HOURS=24
       - JWT_REFRESH_EXPIRATION_DAYS=7
       - CORS_ORIGINS=http://localhost:3000,http://localhost:19006
+      # Nginx reload integration — backend calls docker exec ra_nginx nginx -s reload after cert write
+      - NGINX_CONTAINER_NAME=ra_nginx
+      - NGINX_SSL_DIR=/etc/nginx/ssl
     ports:
       - "8000:8000"
     volumes:
       - ./apps/backend:/app
+      # SSL cert directory — backend writes certs here; Nginx reads from this volume
+      - ./infra/nginx/ssl:/etc/nginx/ssl
+      # Docker socket — allows backend to exec nginx reload in the nginx container
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     depends_on:
       postgres:
         condition: service_healthy
